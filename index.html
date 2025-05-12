@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -7,5 +7,32 @@
 <body>
   <h1>これはテストページです</h1>
   <p>GitHub Pagesから公開されています。</p>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>センサ更新</title>
+</head>
+<body>
+  <h1>センサ在庫の更新</h1>
+  <button onclick="updateSensors()">在庫を更新する</button>
+  <p id="status">状態: 未実行</p>
+
+  <script>
+    function updateSensors() {
+      fetch("https://script.google.com/macros/s/AKfycbz-YnKqMRet8IaFHRsP_Nihc-D5BPdTL3ZCGbX9bJ5OvJ6VLyvteX81zk0zTDrGtOXwZw/exec") // ← あなたのGASのURLに置換
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById("status").textContent = `状態: ${data.status}, 更新数: ${data.updated}`;
+        })
+        .catch(error => {
+          console.error("エラー:", error);
+          document.getElementById("status").textContent = "更新失敗";
+        });
+    }
+  </script>
 </body>
 </html>
