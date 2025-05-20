@@ -185,19 +185,123 @@
             border-radius: 4px;
             margin-bottom: 15px;
         }
+        
+        .choice-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .choice-button {
+            flex: 1;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .choice-button.borrow {
+            background-color: #e8f8f5;
+            border: 2px solid #82e0aa;
+            color: #27ae60;
+        }
+        
+        .choice-button.borrow:hover {
+            background-color: #d1f2e4;
+            transform: translateY(-3px);
+        }
+        
+        .choice-button.return {
+            background-color: #eaf2f8;
+            border: 2px solid #aed6f1;
+            color: #3498db;
+        }
+        
+        .choice-button.return:hover {
+            background-color: #d6e9f9;
+            transform: translateY(-3px);
+        }
+        
+        .choice-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .no-sensors-message {
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            color: #7f8c8d;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>LiDAR利用登録</h1>
+        <h1>LiDARセンサ管理</h1>
         <div class="sensor-icon">📡</div>
         
+        <!-- ステップ0: 操作選択画面 -->
+        <div class="step active" id="step0">
+            <h2>操作を選択してください</h2>
+            
+            <div class="choice-buttons">
+                <div class="choice-button borrow" onclick="showBorrowMode()">
+                    <div class="choice-icon">📥</div>
+                    <div class="choice-title">利用登録</div>
+                    <div class="choice-desc">LiDARを借りる</div>
+                </div>
+                
+                <div class="choice-button return" onclick="showNameInputForReturn()">
+                    <div class="choice-icon">📤</div>
+                    <div class="choice-title">返却登録</div>
+                    <div class="choice-desc">LiDARを返す</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ステップ0.5: 返却用名前入力画面 -->
+        <div class="step" id="step0_5">
+            <h2>返却登録</h2>
+            <p>お名前を入力してください。登録されている使用中のLiDARを検索します。</p>
+            
+            <div class="form-group">
+                <label for="returnSearchName">お名前</label>
+                <input type="text" id="returnSearchName" placeholder="例: 山田太郎">
+            </div>
+            
+            <button onclick="searchUserSensors()">検索</button>
+            <button class="secondary-button" onclick="resetForm()">戻る</button>
+        </div>
+        
+        <!-- ステップ0.6: 返却するセンサ選択画面 -->
+        <div class="step" id="step0_6">
+            <h2>返却するLiDARを選択</h2>
+            <p><span id="returnerNameDisplay"></span>さんが使用中のLiDARセンサ</p>
+            
+            <div id="userSensorsContainer">
+                <!-- ここにユーザーが借りているセンサのリストが表示されます -->
+            </div>
+            
+            <div class="form-group" id="userSensorSelectContainer" style="display: none;">
+                <label for="userSensorSelect">返却するLiDAR</label>
+                <select id="userSensorSelect">
+                    <option value="">選択してください</option>
+                </select>
+            </div>
+            
+            <button id="confirmReturnButton" onclick="confirmReturn()" style="display: none;">返却手続きへ</button>
+            <button class="secondary-button" onclick="resetForm()">戻る</button>
+        </div>
+        
         <!-- ステップ1: センサ情報入力 -->
-        <div class="step active" id="step1">
+        <div class="step" id="step1">
             <h2 id="step1Title">LiDAR利用登録</h2>
             <div class="form-group">
                 <label for="sensorType">メーカー</label>
-                <select id="sensorType" onchange="isReturning ? updateReturnableSensorIds() : updateSensorIds()">
+                <select id="sensorType" onchange="updateSensorIds()">
                     <option value="">選択してください</option>
                     <option value="1">Velodyne</option>
                     <option value="2">Ouster</option>
@@ -214,7 +318,7 @@
             </div>
             
             <button id="checkButton" onclick="checkStatus()">確認</button>
-            <button id="returnButton" class="secondary-button" onclick="showReturnMode()">LiDARを返却する</button>
+            <button class="secondary-button" onclick="resetForm()">戻る</button>
         </div>
         
         <!-- ステップ2: ステータス確認と利用情報入力 -->
@@ -242,22 +346,6 @@
                 <button class="secondary-button" onclick="resetForm()">戻る</button>
             </div>
             
-            <div id="statusInUse" style="display: none;">
-                <div class="status-box status-inuse">
-                    <div>
-                        <p>ステータス</p>
-                        <p class="status-text">使用中</p>
-                    </div>
-                    <div class="status-icon inuse-icon">!</div>
-                </div>
-                
-                <div class="alert">
-                    このLiDARは現在使用中です。別のLiDARを選択してください。
-                </div>
-                
-                <button onclick="resetForm()">戻る</button>
-            </div>
-            
             <div id="statusReturning" style="display: none;">
                 <div class="status-box status-returning">
                     <div>
@@ -267,9 +355,19 @@
                     <div class="status-icon returning-icon">↔</div>
                 </div>
                 
+                <div class="info-panel">
+                    <h3>返却情報</h3>
+                    <ul class="info-list">
+                        <li>メーカー: <span id="returnInfoMaker"></span></li>
+                        <li>LiDAR ID: <span id="returnInfoId"></span></li>
+                        <li>モデル: <span id="returnInfoModel"></span></li>
+                        <li>使用者: <span id="returnInfoUser"></span></li>
+                    </ul>
+                </div>
+                
                 <div class="form-group">
-                    <label for="returnerName">お名前</label>
-                    <input type="text" id="returnerName" placeholder="例: 山田太郎">
+                    <label for="returnComment">返却コメント（任意）</label>
+                    <input type="text" id="returnComment" placeholder="故障や不具合があれば記入してください">
                 </div>
                 
                 <button onclick="returnSensor()">返却する</button>
@@ -291,6 +389,7 @@
                     <ul class="info-list">
                         <li>メーカー: <span id="summaryType"></span></li>
                         <li>LiDAR ID: <span id="summaryId"></span></li>
+                        <li>モデル: <span id="summaryModel"></span></li>
                         <li>利用者: <span id="summaryUser"></span></li>
                         <li>用途: <span id="summaryPurpose"></span></li>
                         <li>ステータス: <span>使用中</span></li>
@@ -312,7 +411,9 @@
                     <ul class="info-list">
                         <li>メーカー: <span id="returnSummaryType"></span></li>
                         <li>LiDAR ID: <span id="returnSummaryId"></span></li>
+                        <li>モデル: <span id="returnSummaryModel"></span></li>
                         <li>返却者: <span id="returnSummaryUser"></span></li>
+                        <li>コメント: <span id="returnSummaryComment"></span></li>
                         <li>ステータス: <span>利用可能</span></li>
                     </ul>
                 </div>
@@ -331,31 +432,158 @@
             { id: 4, name: 'Livox' }
         ];
         
-        // センサID（LiDAR ID）のデータ（メーカーIDに対応）
+        // センサID（LiDAR ID）のデータ（メーカーIDに対応）- 使用者情報を追加
         const sensorIds = {
             '1': [
-                { id: 'VLP-16-001', status: 'available', model: 'VLP-16 Puck' },
-                { id: 'VLP-32-001', status: 'in-use', model: 'VLP-32 Ultra Puck' },
-                { id: 'HDL-64-001', status: 'available', model: 'HDL-64E' }
+                { id: 'VLP-16-001', status: 'available', model: 'VLP-16 Puck', user: null, purpose: null },
+                { id: 'VLP-32-001', status: 'in-use', model: 'VLP-32 Ultra Puck', user: '山田太郎', purpose: '自動運転実験' },
+                { id: 'HDL-64-001', status: 'available', model: 'HDL-64E', user: null, purpose: null }
             ],
             '2': [
-                { id: 'OS1-64-001', status: 'available', model: 'OS1-64' },
-                { id: 'OS0-128-001', status: 'available', model: 'OS0-128' },
-                { id: 'OS2-128-001', status: 'in-use', model: 'OS2-128' }
+                { id: 'OS1-64-001', status: 'available', model: 'OS1-64', user: null, purpose: null },
+                { id: 'OS0-128-001', status: 'available', model: 'OS0-128', user: null, purpose: null },
+                { id: 'OS2-128-001', status: 'in-use', model: 'OS2-128', user: '佐藤花子', purpose: '環境マッピング' }
             ],
             '3': [
-                { id: 'LMS-111-001', status: 'in-use', model: 'LMS-111' },
-                { id: 'TiM-781-001', status: 'available', model: 'TiM-781' }
+                { id: 'LMS-111-001', status: 'in-use', model: 'LMS-111', user: '山田太郎', purpose: '障害物検知システム開発' },
+                { id: 'TiM-781-001', status: 'available', model: 'TiM-781', user: null, purpose: null }
             ],
             '4': [
-                { id: 'MID-70-001', status: 'available', model: 'Mid-70' },
-                { id: 'HOR-32-001', status: 'in-use', model: 'Horizon' },
-                { id: 'AVA-001', status: 'available', model: 'Avia' }
+                { id: 'MID-70-001', status: 'available', model: 'Mid-70', user: null, purpose: null },
+                { id: 'HOR-32-001', status: 'in-use', model: 'Horizon', user: '鈴木一郎', purpose: 'ロボット制御' },
+                { id: 'AVA-001', status: 'available', model: 'Avia', user: null, purpose: null }
             ]
         };
         
-        // isReturning フラグ
+        // 利用モードか返却モードかのフラグ
         let isReturning = false;
+        
+        // 選択された返却センサの情報
+        let selectedReturnSensor = null;
+        
+        // 借りるモードを表示
+        function showBorrowMode() {
+            isReturning = false;
+            showStep(1);
+        }
+        
+        // 返却用の名前入力画面を表示
+        function showNameInputForReturn() {
+            showStep('0_5');
+        }
+        
+        // ユーザーが借りているセンサを検索
+        function searchUserSensors() {
+            const userName = document.getElementById('returnSearchName').value;
+            
+            if (!userName) {
+                alert('お名前を入力してください');
+                return;
+            }
+            
+            // ユーザー名をページに表示
+            document.getElementById('returnerNameDisplay').textContent = userName;
+            
+            // 使用中のセンサを検索
+            const userSensors = [];
+            
+            // すべてのメーカーのセンサをチェック
+            for (const makerKey in sensorIds) {
+                const makerId = makerKey;
+                const makerName = sensorTypes.find(type => type.id == makerId).name;
+                
+                sensorIds[makerKey].forEach(sensor => {
+                    if (sensor.status === 'in-use' && sensor.user === userName) {
+                        userSensors.push({
+                            id: sensor.id,
+                            model: sensor.model,
+                            makerid: makerId,
+                            maker: makerName,
+                            purpose: sensor.purpose
+                        });
+                    }
+                });
+            }
+            
+            const container = document.getElementById('userSensorsContainer');
+            const selectContainer = document.getElementById('userSensorSelectContainer');
+            const select = document.getElementById('userSensorSelect');
+            const confirmButton = document.getElementById('confirmReturnButton');
+            
+            // セレクトボックスをリセット
+            select.innerHTML = '<option value="">選択してください</option>';
+            
+            if (userSensors.length === 0) {
+                // 使用中のセンサがない場合
+                container.innerHTML = `
+                    <div class="no-sensors-message">
+                        <p>該当するLiDARセンサが見つかりません</p>
+                        <p>お名前が正しいかご確認ください</p>
+                    </div>
+                `;
+                selectContainer.style.display = 'none';
+                confirmButton.style.display = 'none';
+            } else {
+                // 使用中のセンサがある場合
+                let html = '<div class="info-panel"><ul class="info-list">';
+                
+                userSensors.forEach(sensor => {
+                    html += `
+                        <li>
+                            <strong>${sensor.maker} ${sensor.model}</strong><br>
+                            ID: ${sensor.id}<br>
+                            用途: ${sensor.purpose}
+                        </li>
+                    `;
+                    
+                    // セレクトボックスにオプションを追加
+                    const option = document.createElement('option');
+                    option.value = JSON.stringify({
+                        id: sensor.id,
+                        makerid: sensor.makerid,
+                        maker: sensor.maker,
+                        model: sensor.model
+                    });
+                    option.textContent = `${sensor.maker} ${sensor.model} (${sensor.id})`;
+                    select.appendChild(option);
+                });
+                
+                html += '</ul></div>';
+                container.innerHTML = html;
+                
+                selectContainer.style.display = 'block';
+                confirmButton.style.display = 'block';
+            }
+            
+            showStep('0_6');
+        }
+        
+        // 返却するセンサを確認
+        function confirmReturn() {
+            const select = document.getElementById('userSensorSelect');
+            const selection = select.value;
+            
+            if (!selection) {
+                alert('返却するLiDARを選択してください');
+                return;
+            }
+            
+            // 選択されたセンサの情報を取得
+            selectedReturnSensor = JSON.parse(selection);
+            const userName = document.getElementById('returnSearchName').value;
+            
+            // 返却情報を表示
+            document.getElementById('returnInfoMaker').textContent = selectedReturnSensor.maker;
+            document.getElementById('returnInfoId').textContent = selectedReturnSensor.id;
+            document.getElementById('returnInfoModel').textContent = selectedReturnSensor.model;
+            document.getElementById('returnInfoUser').textContent = userName;
+            
+            // 返却画面を表示
+            isReturning = true;
+            showStep(2);
+            document.getElementById('statusAvailable').style.display = 'none';
+            document.getElementById('statusReturning').style.display = 'block';
+        }
         
         // センサIDのプルダウンを更新
         function updateSensorIds() {
@@ -395,10 +623,11 @@
             } else {
                 availableIds.forEach(idInfo => {
                     const option = document.createElement('option');
-                    option.value = idInfo.id;
+                    option.value = JSON.stringify({
+                        id: idInfo.id,
+                        model: idInfo.model
+                    });
                     option.textContent = `${idInfo.id} - ${idInfo.model}`;
-                    option.dataset.status = idInfo.status;
-                    option.dataset.model = idInfo.model;
                     sensorIdSelect.appendChild(option);
                 });
             }
@@ -407,81 +636,26 @@
             sensorIdSelect.disabled = false;
         }
         
-        // 返却可能なセンサIDのプルダウンを更新
-        function updateReturnableSensorIds() {
-            const sensorTypeSelect = document.getElementById('sensorType');
-            const sensorIdSelect = document.getElementById('sensorId');
-            const selectedType = sensorTypeSelect.value;
-            
-            // まずセレクトボックスをリセット
-            sensorIdSelect.innerHTML = '';
-            
-            if (!selectedType) {
-                // 何も選択されていない場合
-                const defaultOption = document.createElement('option');
-                defaultOption.value = '';
-                defaultOption.textContent = 'メーカーを先に選択してください';
-                sensorIdSelect.appendChild(defaultOption);
-                sensorIdSelect.disabled = true;
-                return;
-            }
-            
-            // デフォルトオプション
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.textContent = '選択してください';
-            sensorIdSelect.appendChild(defaultOption);
-            
-            // 選択されたセンサタイプに対応するIDを追加（使用中のもののみ）
-            const ids = sensorIds[selectedType] || [];
-            const inUseIds = ids.filter(idInfo => idInfo.status === 'in-use');
-            
-            if (inUseIds.length === 0) {
-                const noOption = document.createElement('option');
-                noOption.value = '';
-                noOption.textContent = '返却可能なLiDARはありません';
-                noOption.disabled = true;
-                sensorIdSelect.appendChild(noOption);
-            } else {
-                inUseIds.forEach(idInfo => {
-                    const option = document.createElement('option');
-                    option.value = idInfo.id;
-                    option.textContent = `${idInfo.id} - ${idInfo.model}`;
-                    option.dataset.status = idInfo.status;
-                    option.dataset.model = idInfo.model;
-                    sensorIdSelect.appendChild(option);
-                });
-            }
-            
-            // セレクトボックスを有効化
-            sensorIdSelect.disabled = false;
-        }
-        
-        // ステータス確認（兼 返却モード確認）
+        // ステータス確認
         function checkStatus() {
             const sensorTypeSelect = document.getElementById('sensorType');
             const sensorIdSelect = document.getElementById('sensorId');
             const sensorType = sensorTypeSelect.value;
-            const sensorId = sensorIdSelect.value;
+            const sensorIdValue = sensorIdSelect.value;
             
-            if (!sensorType || !sensorId) {
+            if (!sensorType || !sensorIdValue) {
                 alert('メーカーとLiDAR IDを選択してください');
                 return;
             }
             
+            // 選択されたセンサの情報をJSONから取得
+            const sensorInfo = JSON.parse(sensorIdValue);
+            
             showStep(2);
             
-            if (isReturning) {
-                // 返却モードの場合、返却画面を表示
-                document.getElementById('statusAvailable').style.display = 'none';
-                document.getElementById('statusInUse').style.display = 'none';
-                document.getElementById('statusReturning').style.display = 'block';
-            } else {
-                // 利用登録モードの場合、常に利用可能状態を表示（利用可能なセンサのみ表示しているため）
-                document.getElementById('statusAvailable').style.display = 'block';
-                document.getElementById('statusInUse').style.display = 'none';
-                document.getElementById('statusReturning').style.display = 'none';
-            }
+            // 常に利用可能状態を表示（利用可能なセンサのみを表示しているため）
+            document.getElementById('statusAvailable').style.display = 'block';
+            document.getElementById('statusReturning').style.display = 'none';
         }
         
         // ステップ表示関数
@@ -490,23 +664,6 @@
                 step.classList.remove('active');
             });
             document.getElementById('step' + stepNumber).classList.add('active');
-        }
-        
-        // 返却モードに切替える別の関数を作成
-        function showReturnMode() {
-            isReturning = true;
-            
-            // センサタイプのセレクトボックスをクリア
-            const sensorTypeSelect = document.getElementById('sensorType');
-            sensorTypeSelect.value = '';
-            
-            // センサIDのセレクトボックスをクリア
-            updateReturnableSensorIds();
-            
-            // 返却モードビューに切り替え
-            document.getElementById('step1Title').textContent = 'LiDAR返却';
-            document.getElementById('checkButton').textContent = '返却確認';
-            document.getElementById('returnButton').style.display = 'none';
         }
         
         // 利用登録処理
@@ -519,18 +676,35 @@
                 return;
             }
             
+            const sensorTypeSelect = document.getElementById('sensorType');
+            const sensorIdSelect = document.getElementById('sensorId');
+            const sensorType = sensorTypeSelect.value;
+            const sensorIdValue = sensorIdSelect.value;
+            
+            // 選択されたセンサの情報をJSONから取得
+            const sensorInfo = JSON.parse(sensorIdValue);
+            
             // モックの非同期操作（本番では実際のAPIを呼び出す）
             setTimeout(() => {
+                // ここで実際のデータを更新する（モック用）
+                sensorIds[sensorType].forEach(sensor => {
+                    if (sensor.id === sensorInfo.id) {
+                        sensor.status = 'in-use';
+                        sensor.user = userName;
+                        sensor.purpose = purpose;
+                    }
+                });
+                
                 showStep(3);
                 document.getElementById('registrationComplete').style.display = 'block';
                 document.getElementById('returnComplete').style.display = 'none';
                 
                 // 登録情報のサマリー
-                const sensorTypeId = document.getElementById('sensorType').value;
-                const sensorTypeName = sensorTypes.find(t => t.id == sensorTypeId)?.name || '';
+                const sensorTypeName = sensorTypes.find(t => t.id == sensorType)?.name || '';
                 
                 document.getElementById('summaryType').textContent = sensorTypeName;
-                document.getElementById('summaryId').textContent = document.getElementById('sensorId').value;
+                document.getElementById('summaryId').textContent = sensorInfo.id;
+                document.getElementById('summaryModel').textContent = sensorInfo.model;
                 document.getElementById('summaryUser').textContent = userName;
                 document.getElementById('summaryPurpose').textContent = purpose;
             }, 500);
@@ -538,26 +712,36 @@
         
         // センサ返却処理
         function returnSensor() {
-            const returnerName = document.getElementById('returnerName').value;
+            const returnComment = document.getElementById('returnComment').value || 'なし';
+            const userName = document.getElementById('returnSearchName').value;
             
-            if (!returnerName) {
-                alert('お名前を入力してください');
+            if (!selectedReturnSensor) {
+                alert('エラーが発生しました。もう一度やり直してください');
+                resetForm();
                 return;
             }
             
             // モックの非同期操作（本番では実際のAPIを呼び出す）
             setTimeout(() => {
+                // ここで実際のデータを更新する（モック用）
+                sensorIds[selectedReturnSensor.makerid].forEach(sensor => {
+                    if (sensor.id === selectedReturnSensor.id) {
+                        sensor.status = 'available';
+                        sensor.user = null;
+                        sensor.purpose = null;
+                    }
+                });
+                
                 showStep(3);
                 document.getElementById('registrationComplete').style.display = 'none';
                 document.getElementById('returnComplete').style.display = 'block';
                 
                 // 返却情報のサマリー
-                const sensorTypeId = document.getElementById('sensorType').value;
-                const sensorTypeName = sensorTypes.find(t => t.id == sensorTypeId)?.name || '';
-                
-                document.getElementById('returnSummaryType').textContent = sensorTypeName;
-                document.getElementById('returnSummaryId').textContent = document.getElementById('sensorId').value;
-                document.getElementById('returnSummaryUser').textContent = returnerName;
+                document.getElementById('returnSummaryType').textContent = selectedReturnSensor.maker;
+                document.getElementById('returnSummaryId').textContent = selectedReturnSensor.id;
+                document.getElementById('returnSummaryModel').textContent = selectedReturnSensor.model;
+                document.getElementById('returnSummaryUser').textContent = userName;
+                document.getElementById('returnSummaryComment').textContent = returnComment;
             }, 500);
         }
         
@@ -568,15 +752,207 @@
             document.getElementById('sensorId').disabled = true;
             document.getElementById('userName').value = '';
             document.getElementById('purpose').value = '';
-            document.getElementById('returnerName').value = '';
+            
+            if (document.getElementById('returnSearchName')) {
+                document.getElementById('returnSearchName').value = '';
+            }
+            if (document.getElementById('returnComment')) {
+                document.getElementById('returnComment').value = '';
+            }
             
             isReturning = false;
-            document.getElementById('step1Title').textContent = 'LiDAR利用登録';
-            document.getElementById('checkButton').textContent = '確認';
-            document.getElementById('returnButton').style.display = 'block';
+            selectedReturnSensor = null;
             
-            showStep(1);
+            showStep(0);
         }
     </script>
-</body>
+</html><!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>センサ管理システム - LiDAR利用登録</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .sensor-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .step {
+            display: none;
+        }
+        
+        .step.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .status-box {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-available {
+            background-color: #e8f8f5;
+            border: 1px solid #82e0aa;
+        }
+        
+        .status-inuse {
+            background-color: #fdedec;
+            border: 1px solid #f5b7b1;
+        }
+        
+        .status-returning {
+            background-color: #eaf2f8;
+            border: 1px solid #aed6f1;
+        }
+        
+        .status-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .status-text {
+            font-weight: bold;
+        }
+        
+        .available-icon {
+            background-color: #82e0aa;
+            color: white;
+        }
+        
+        .inuse-icon {
+            background-color: #f5b7b1;
+            color: white;
+        }
+        
+        .returning-icon {
+            background-color: #aed6f1;
+            color: white;
+        }
+        
+        .secondary-button {
+            background-color: #95a5a6;
+            margin-top: 10px;
+        }
+        
+        .secondary-button:hover {
+            background-color: #7f8c8d;
+        }
+        
+        .completion-message {
+            text-align: center;
+            padding: 20px 0;
+        }
+        
+        .completion-icon {
+            font-size: 48px;
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+        
+        .info-panel {
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .info-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        .info-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .info-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .alert {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
 </html>
