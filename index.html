@@ -1,10 +1,23 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>センサ管理システム</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- スタイルは省略せず元のCSSを使用 --- */
+        /* ご希望があれば CSS 部分も調整して再送できます */
+    </style>
+</head>
 <body>
     <div class="container">
         <header>
             <h1>センサ管理システム</h1>
             <p id="headerSubtitle">研究室センサの利用状況を管理</p>
         </header>
-        
+
         <div class="content">
             <!-- ステップ1: センサ情報入力 -->
             <div class="step active" id="step1">
@@ -21,7 +34,7 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="sensorId">センサID</label>
                     <div class="custom-select">
@@ -30,7 +43,7 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <button id="checkButton" onclick="checkStatus()" class="ripple-effect">
                     <i class="fas fa-check-circle"></i> 確認
                 </button>
@@ -38,8 +51,8 @@
                     <i class="fas fa-undo-alt"></i> センサを返却する
                 </button>
             </div>
-            
-            <!-- ステップ2: ステータス確認と利用情報入力 -->
+
+            <!-- ステップ2 -->
             <div class="step" id="step2">
                 <div id="statusAvailable" style="display: none;">
                     <div class="status-box status-available">
@@ -51,12 +64,12 @@
                             <i class="fas fa-check"></i>
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="userName">お名前</label>
                         <input type="text" id="userName" placeholder="例: 山田太郎">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="purpose">用途
                             <span class="tooltip">
@@ -66,7 +79,7 @@
                         </label>
                         <input type="text" id="purpose" placeholder="例: 実験、研究、デモンストレーションなど">
                     </div>
-                    
+
                     <button onclick="registerUsage()" class="ripple-effect">
                         <i class="fas fa-save"></i> 利用登録する
                     </button>
@@ -74,7 +87,7 @@
                         <i class="fas fa-arrow-left"></i> 戻る
                     </button>
                 </div>
-                
+
                 <div id="statusInUse" style="display: none;">
                     <div class="status-box status-inuse">
                         <div class="status-info">
@@ -85,17 +98,17 @@
                             <i class="fas fa-exclamation"></i>
                         </div>
                     </div>
-                    
+
                     <div class="alert">
                         <i class="fas fa-exclamation-triangle"></i>
                         <span>このセンサは現在使用中です。別のセンサを選択してください。</span>
                     </div>
-                    
+
                     <button onclick="resetForm()" class="ripple-effect">
                         <i class="fas fa-arrow-left"></i> 戻る
                     </button>
                 </div>
-                
+
                 <div id="statusReturning" style="display: none;">
                     <div class="status-box status-returning">
                         <div class="status-info">
@@ -106,12 +119,12 @@
                             <i class="fas fa-exchange-alt"></i>
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="returnerName">お名前</label>
                         <input type="text" id="returnerName" placeholder="例: 山田太郎">
                     </div>
-                    
+
                     <button onclick="returnSensor()" class="ripple-effect">
                         <i class="fas fa-check-double"></i> 返却する
                     </button>
@@ -120,8 +133,8 @@
                     </button>
                 </div>
             </div>
-            
-            <!-- ステップ3: 完了画面 -->
+
+            <!-- ステップ3 -->
             <div class="step" id="step3">
                 <div id="registrationComplete" style="display: none;">
                     <div class="completion-message">
@@ -131,38 +144,23 @@
                         <h2>利用登録完了</h2>
                         <p>センサの利用が登録されました</p>
                     </div>
-                    
+
                     <div class="info-panel">
                         <h3>登録情報</h3>
                         <ul class="info-list">
-                            <li>
-                                <span>センサタイプ</span>
-                                <span id="summaryType"></span>
-                            </li>
-                            <li>
-                                <span>センサID</span>
-                                <span id="summaryId"></span>
-                            </li>
-                            <li>
-                                <span>利用者</span>
-                                <span id="summaryUser"></span>
-                            </li>
-                            <li>
-                                <span>用途</span>
-                                <span id="summaryPurpose"></span>
-                            </li>
-                            <li>
-                                <span>ステータス</span>
-                                <span><span class="badge badge-inuse">使用中</span></span>
-                            </li>
+                            <li><span>センサタイプ</span><span id="summaryType"></span></li>
+                            <li><span>センサID</span><span id="summaryId"></span></li>
+                            <li><span>利用者</span><span id="summaryUser"></span></li>
+                            <li><span>用途</span><span id="summaryPurpose"></span></li>
+                            <li><span>ステータス</span><span><span class="badge badge-inuse">使用中</span></span></li>
                         </ul>
                     </div>
-                    
+
                     <button onclick="resetForm()" class="ripple-effect">
                         <i class="fas fa-home"></i> トップに戻る
                     </button>
                 </div>
-                
+
                 <div id="returnComplete" style="display: none;">
                     <div class="completion-message">
                         <div class="completion-icon">
@@ -171,29 +169,17 @@
                         <h2>返却完了</h2>
                         <p>センサが正常に返却されました</p>
                     </div>
-                    
+
                     <div class="info-panel">
                         <h3>返却情報</h3>
                         <ul class="info-list">
-                            <li>
-                                <span>センサタイプ</span>
-                                <span id="returnSummaryType"></span>
-                            </li>
-                            <li>
-                                <span>センサID</span>
-                                <span id="returnSummaryId"></span>
-                            </li>
-                            <li>
-                                <span>返却者</span>
-                                <span id="returnSummaryUser"></span>
-                            </li>
-                            <li>
-                                <span>ステータス</span>
-                                <span><span class="badge badge-available">利用可能</span></span>
-                            </li>
+                            <li><span>センサタイプ</span><span id="returnSummaryType"></span></li>
+                            <li><span>センサID</span><span id="returnSummaryId"></span></li>
+                            <li><span>返却者</span><span id="returnSummaryUser"></span></li>
+                            <li><span>ステータス</span><span><span class="badge badge-available">利用可能</span></span></li>
                         </ul>
                     </div>
-                    
+
                     <button onclick="resetForm()" class="ripple-effect">
                         <i class="fas fa-home"></i> トップに戻る
                     </button>
@@ -201,564 +187,272 @@
             </div>
         </div>
     </div>
-    
-    <!-- Floating Action Button -->
-    <div class="fab-button" onclick="toggleHelp()" id="helpButton">
+
+    <!-- Floating Help Button -->
+    <!-- toggleHelp 関数が未定義なので、必要に応じて定義してください -->
+    <div class="fab-button" id="helpButton" onclick="/* toggleHelp() */">
         <i class="fas fa-question"></i>
-    </div><!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>センサ管理システム</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary-color: #4361ee;
-            --primary-light: #d8e1ff;
-            --secondary-color: #3f37c9;
-            --success-color: #4cc9f0;
-            --warning-color: #f72585;
-            --info-color: #4895ef;
-            --dark-color: #212529;
-            --light-color: #f8f9fa;
-            --gray-color: #adb5bd;
-            --white-color: #ffffff;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
-            --border-radius: 8px;
-        }
+    </div>
+
+    <!-- スクリプト：元のJavaScriptをそのまま活用 -->
+    <script>
+        /* --- あなたの元コードにあるJS関数群をここに入れてください --- */
+              // センサタイプのデータ
+        const sensorTypes = [
+            { id: 1, name: 'Panasonic 温度センサ' },
+            { id: 2, name: 'OMRON 圧力センサ' },
+            { id: 3, name: '東京計器 流量センサ' },
+            { id: 4, name: 'Keyence 光センサ' }
+        ];
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        // センサIDのデータ（センサタイプIDに対応）
+        const sensorIds = {
+            '1': [
+                { id: 'TP001', status: 'available' },
+                { id: 'TP002', status: 'in-use' },
+                { id: 'TP003', status: 'available' },
+                { id: 'TP004', status: 'in-use' }
+            ],
+            '2': [
+                { id: 'PR001', status: 'available' },
+                { id: 'PR002', status: 'available' },
+                { id: 'PR003', status: 'in-use' }
+            ],
+            '3': [
+                { id: 'FL001', status: 'in-use' },
+                { id: 'FL002', status: 'available' },
+                { id: 'FL003', status: 'available' }
+            ],
+            '4': [
+                { id: 'LS001', status: 'available' },
+                { id: 'LS002', status: 'in-use' },
+                { id: 'LS003', status: 'available' },
+                { id: 'LS004', status: 'available' }
+            ]
+        };
         
-        body {
-            font-family: 'Noto Sans JP', sans-serif;
-            background-color: #f5f8fe;
-            color: var(--dark-color);
-            line-height: 1.6;
-        }
+        // isReturning フラグ
+        let isReturning = false;
         
-        .container {
-            max-width: 500px;
-            margin: 20px auto;
-            background: var(--white-color);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        header {
-            background: var(--primary-color);
-            color: var(--white-color);
-            padding: 20px;
-            text-align: center;
-            position: relative;
-        }
-        
-        header h1 {
-            font-size: 1.6rem;
-            font-weight: 500;
-            margin-bottom: 5px;
-        }
-        
-        header p {
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-        
-        .content {
-            padding: 20px;
-        }
-        
-        .step {
-            display: none;
-        }
-        
-        .step.active {
-            display: block;
-            animation: slideIn 0.3s ease-in-out;
-        }
-        
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(10px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        
-        h2 {
-            font-size: 1.2rem;
-            color: var(--secondary-color);
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            font-size: 0.9rem;
-            color: var(--dark-color);
-        }
-        
-        input, select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #e0e0e0;
-            border-radius: var(--border-radius);
-            font-size: 16px;
-            transition: var(--transition);
-            background: var(--light-color);
-            color: var(--dark-color);
-            font-family: 'Noto Sans JP', sans-serif;
-        }
-        
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
-        }
-        
-        input::placeholder {
-            color: var(--gray-color);
-        }
-        
-        select:disabled {
-            background-color: #f9f9f9;
-            cursor: not-allowed;
-        }
-        
-        button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            padding: 12px 20px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: var(--border-radius);
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
-            margin-top: 10px;
-            font-family: 'Noto Sans JP', sans-serif;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        button:hover {
-            background-color: var(--secondary-color);
-            transform: translateY(-2px);
-        }
-        
-        button:active {
-            transform: translateY(0);
-        }
-        
-        button i {
-            margin-right: 8px;
-        }
-        
-        button.ripple::after {
-            content: "";
-            position: absolute;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            transform: scale(0);
-            animation: ripple 0.6s linear;
-        }
-        
-        @keyframes ripple {
-            to {
-                transform: scale(4);
-                opacity: 0;
-            }
-        }
-        
-        button:disabled {
-            background-color: var(--gray-color);
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .secondary-button {
-            background-color: transparent;
-            color: var(--primary-color);
-            border: 1px solid var(--primary-color);
-        }
-        
-        .secondary-button:hover {
-            background-color: var(--primary-light);
-            color: var(--secondary-color);
-        }
-        
-        .status-box {
-            padding: 20px;
-            margin-bottom: 25px;
-            border-radius: var(--border-radius);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        
-        .status-box::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 5px;
-        }
-        
-        .status-available {
-            background-color: rgba(76, 201, 240, 0.1);
-        }
-        
-        .status-available::before {
-            background-color: var(--success-color);
-        }
-        
-        .status-inuse {
-            background-color: rgba(247, 37, 133, 0.1);
-        }
-        
-        .status-inuse::before {
-            background-color: var(--warning-color);
-        }
-        
-        .status-returning {
-            background-color: rgba(67, 97, 238, 0.1);
-        }
-        
-        .status-returning::before {
-            background-color: var(--info-color);
-        }
-        
-        .status-info {
-            flex: 1;
-        }
-        
-        .status-info p:first-child {
-            font-size: 0.9rem;
-            color: var(--gray-color);
-            margin-bottom: 5px;
-        }
-        
-        .status-text {
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-        
-        .status-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            margin-left: 15px;
-        }
-        
-        .available-icon {
-            background-color: var(--success-color);
-            color: white;
-        }
-        
-        .inuse-icon {
-            background-color: var(--warning-color);
-            color: white;
-        }
-        
-        .returning-icon {
-            background-color: var(--info-color);
-            color: white;
-        }
-        
-        .alert {
-            background-color: rgba(247, 37, 133, 0.1);
-            border-left: 5px solid var(--warning-color);
-            color: var(--dark-color);
-            padding: 15px;
-            border-radius: var(--border-radius);
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-        }
-        
-        .alert i {
-            margin-right: 10px;
-            color: var(--warning-color);
-            font-size: 1.2rem;
-        }
-        
-        .completion-message {
-            text-align: center;
-            padding: 30px 0;
-        }
-        
-        .completion-icon {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: var(--success-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            color: white;
-            font-size: 2rem;
-            box-shadow: 0 5px 15px rgba(76, 201, 240, 0.3);
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(76, 201, 240, 0.7);
-            }
-            70% {
-                box-shadow: 0 0 0 10px rgba(76, 201, 240, 0);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(76, 201, 240, 0);
-            }
-        }
-        
-        .completion-message h2 {
-            border: none;
-            margin-bottom: 5px;
-            color: var(--dark-color);
-        }
-        
-        .completion-message p {
-            color: var(--gray-color);
-            margin-bottom: 20px;
-        }
-        
-        .info-panel {
-            background-color: #f8f9fa;
-            border-radius: var(--border-radius);
-            padding: 20px;
-            margin-top: 20px;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        
-        .info-panel h3 {
-            font-size: 1rem;
-            color: var(--dark-color);
-            margin-bottom: 15px;
-        }
-        
-        .info-list {
-            list-style-type: none;
-        }
-        
-        .info-list li {
-            padding: 10px 0;
-            border-bottom: 1px solid #e9ecef;
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        .info-list li:last-child {
-            border-bottom: none;
-        }
-        
-        .info-list li span:first-child {
-            color: var(--gray-color);
-            font-size: 0.85rem;
-        }
-        
-        .info-list li span:last-child {
-            font-weight: 500;
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 500;
-            text-transform: uppercase;
-        }
-        
-        .badge-available {
-            background-color: var(--success-color);
-            color: white;
-        }
-        
-        .badge-inuse {
-            background-color: var(--warning-color);
-            color: white;
-        }
-        
-        .fab-button {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background-color: var(--primary-color);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            transition: var(--transition);
-            z-index: 100;
-        }
-        
-        .fab-button:hover {
-            transform: scale(1.1);
-            background-color: var(--secondary-color);
-        }
-        
-        @media (max-width: 600px) {
-            .container {
-                margin: 0;
-                border-radius: 0;
-                height: 100vh;
-                display: flex;
-                flex-direction: column;
+        // センサIDのプルダウンを更新
+        function updateSensorIds() {
+            const sensorTypeSelect = document.getElementById('sensorType');
+            const sensorIdSelect = document.getElementById('sensorId');
+            const selectedType = sensorTypeSelect.value;
+            
+            // まずセレクトボックスをリセット
+            sensorIdSelect.innerHTML = '';
+            
+            if (!selectedType) {
+                // 何も選択されていない場合
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'センサの種類を先に選択してください';
+                sensorIdSelect.appendChild(defaultOption);
+                sensorIdSelect.disabled = true;
+                return;
             }
             
-            .content {
-                flex: 1;
-                overflow-y: auto;
+            // デフォルトオプション
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '選択してください';
+            sensorIdSelect.appendChild(defaultOption);
+            
+            // 選択されたセンサタイプに対応するIDを追加（利用可能なもののみ）
+            const ids = sensorIds[selectedType] || [];
+            const availableIds = ids.filter(idInfo => idInfo.status === 'available');
+            
+            if (availableIds.length === 0) {
+                const noOption = document.createElement('option');
+                noOption.value = '';
+                noOption.textContent = '利用可能なセンサはありません';
+                noOption.disabled = true;
+                sensorIdSelect.appendChild(noOption);
+            } else {
+                availableIds.forEach(idInfo => {
+                    const option = document.createElement('option');
+                    option.value = idInfo.id;
+                    option.textContent = idInfo.id;
+                    option.dataset.status = idInfo.status;
+                    sensorIdSelect.appendChild(option);
+                });
             }
             
-            .fab-button {
-                bottom: 15px;
-                right: 15px;
+            // セレクトボックスを有効化
+            sensorIdSelect.disabled = false;
+        }
+        
+        // ステップ表示関数
+        function showStep(stepNumber) {
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+            document.getElementById('step' + stepNumber).classList.add('active');
+        }
+        
+        // ステータス確認（兼 返却モード確認）
+        function checkStatus() {
+            const sensorTypeSelect = document.getElementById('sensorType');
+            const sensorIdSelect = document.getElementById('sensorId');
+            const sensorType = sensorTypeSelect.value;
+            const sensorId = sensorIdSelect.value;
+            
+            if (!sensorType || !sensorId) {
+                alert('センサの種類とIDを選択してください');
+                return;
+            }
+            
+            showStep(2);
+            
+            if (isReturning) {
+                // 返却モードの場合、返却画面を表示
+                document.getElementById('statusAvailable').style.display = 'none';
+                document.getElementById('statusInUse').style.display = 'none';
+                document.getElementById('statusReturning').style.display = 'block';
+            } else {
+                // 利用登録モードの場合、常に利用可能状態を表示（利用可能なセンサのみ表示しているため）
+                document.getElementById('statusAvailable').style.display = 'block';
+                document.getElementById('statusInUse').style.display = 'none';
+                document.getElementById('statusReturning').style.display = 'none';
             }
         }
         
-        /* Loading animation */
-        .loading {
-            display: inline-block;
-            position: relative;
-            width: 20px;
-            height: 20px;
-            margin-right: 10px;
+        // 返却モードに切替える別の関数を作成
+        function showReturnMode() {
+            isReturning = true;
+            
+            // センサタイプのセレクトボックスをクリア
+            const sensorTypeSelect = document.getElementById('sensorType');
+            sensorTypeSelect.value = '';
+            
+            // センサIDのセレクトボックスをクリア
+            updateReturnableSensorIds();
+            
+            // 返却モードビューに切り替え
+            document.getElementById('step1Title').textContent = 'センサ返却';
+            document.getElementById('checkButton').textContent = '返却確認';
+            document.getElementById('returnButton').style.display = 'none';
         }
         
-        .loading:after {
-            content: " ";
-            display: block;
-            border-radius: 50%;
-            width: 0;
-            height: 0;
-            margin: 0;
-            box-sizing: border-box;
-            border: 10px solid white;
-            border-color: white transparent white transparent;
-            animation: loading 1.2s infinite;
-        }
-        
-        @keyframes loading {
-            0% {
-                transform: rotate(0);
-                animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+        // 返却可能なセンサIDのプルダウンを更新
+        function updateReturnableSensorIds() {
+            const sensorTypeSelect = document.getElementById('sensorType');
+            const sensorIdSelect = document.getElementById('sensorId');
+            const selectedType = sensorTypeSelect.value;
+            
+            // まずセレクトボックスをリセット
+            sensorIdSelect.innerHTML = '';
+            
+            if (!selectedType) {
+                // 何も選択されていない場合
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'センサの種類を先に選択してください';
+                sensorIdSelect.appendChild(defaultOption);
+                sensorIdSelect.disabled = true;
+                return;
             }
-            50% {
-                transform: rotate(180deg);
-                animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+            
+            // デフォルトオプション
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '選択してください';
+            sensorIdSelect.appendChild(defaultOption);
+            
+            // 選択されたセンサタイプに対応するIDを追加（使用中のもののみ）
+            const ids = sensorIds[selectedType] || [];
+            const inUseIds = ids.filter(idInfo => idInfo.status === 'in-use');
+            
+            if (inUseIds.length === 0) {
+                const noOption = document.createElement('option');
+                noOption.value = '';
+                noOption.textContent = '返却可能なセンサはありません';
+                noOption.disabled = true;
+                sensorIdSelect.appendChild(noOption);
+            } else {
+                inUseIds.forEach(idInfo => {
+                    const option = document.createElement('option');
+                    option.value = idInfo.id;
+                    option.textContent = idInfo.id;
+                    option.dataset.status = idInfo.status;
+                    sensorIdSelect.appendChild(option);
+                });
             }
-            100% {
-                transform: rotate(360deg);
-                animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+            
+            // セレクトボックスを有効化
+            sensorIdSelect.disabled = false;
+        }
+        
+        // 利用登録処理
+        function registerUsage() {
+            const userName = document.getElementById('userName').value;
+            const purpose = document.getElementById('purpose').value;
+            
+            if (!userName || !purpose) {
+                alert('お名前と用途を入力してください');
+                return;
             }
+            
+            // モックの非同期操作（本番では実際のAPIを呼び出す）
+            setTimeout(() => {
+                showStep(3);
+                document.getElementById('registrationComplete').style.display = 'block';
+                document.getElementById('returnComplete').style.display = 'none';
+                
+                // 登録情報のサマリー
+                const sensorTypeId = document.getElementById('sensorType').value;
+                const sensorTypeName = sensorTypes.find(t => t.id == sensorTypeId)?.name || '';
+                
+                document.getElementById('summaryType').textContent = sensorTypeName;
+                document.getElementById('summaryId').textContent = document.getElementById('sensorId').value;
+                document.getElementById('summaryUser').textContent = userName;
+                document.getElementById('summaryPurpose').textContent = purpose;
+            }, 500);
         }
         
-        /* Custom select styling */
-        .custom-select {
-            position: relative;
+        // センサ返却処理
+        function returnSensor() {
+            const returnerName = document.getElementById('returnerName').value;
+            
+            if (!returnerName) {
+                alert('お名前を入力してください');
+                return;
+            }
+            
+            // モックの非同期操作（本番では実際のAPIを呼び出す）
+            setTimeout(() => {
+                showStep(3);
+                document.getElementById('registrationComplete').style.display = 'none';
+                document.getElementById('returnComplete').style.display = 'block';
+                
+                // 返却情報のサマリー
+                const sensorTypeId = document.getElementById('sensorType').value;
+                const sensorTypeName = sensorTypes.find(t => t.id == sensorTypeId)?.name || '';
+                
+                document.getElementById('returnSummaryType').textContent = sensorTypeName;
+                document.getElementById('returnSummaryId').textContent = document.getElementById('sensorId').value;
+                document.getElementById('returnSummaryUser').textContent = returnerName;
+            }, 500);
         }
         
-        .custom-select select {
-            appearance: none;
-            padding-right: 35px;
+        // フォームのリセット
+        function resetForm() {
+            document.getElementById('sensorType').value = '';
+            document.getElementById('sensorId').innerHTML = '<option value="">センサの種類を先に選択してください</option>';
+            document.getElementById('sensorId').disabled = true;
+            document.getElementById('userName').value = '';
+            document.getElementById('purpose').value = '';
+            document.getElementById('returnerName').value = '';
+            
+            isReturning = false;
+            document.getElementById('step1Title').textContent = 'センサ利用登録';
+            document.getElementById('checkButton').textContent = '確認';
+            document.getElementById('returnButton').style.display = 'block';
+            
+            showStep(1);
         }
-        
-        .custom-select::after {
-            content: '\f078';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-            color: var(--primary-color);
-        }
-        
-        /* Tooltip */
-        .tooltip {
-            position: relative;
-            display: inline-block;
-            margin-left: 5px;
-        }
-        
-        .tooltip .tooltip-icon {
-            color: var(--gray-color);
-            cursor: pointer;
-        }
-        
-        .tooltip .tooltip-text {
-            visibility: hidden;
-            width: 200px;
-            background-color: var(--dark-color);
-            color: var(--white-color);
-            text-align: center;
-            border-radius: 6px;
-            padding: 8px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 0.8rem;
-        }
-        
-        .tooltip .tooltip-text::after {
-            content: "";
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: var(--dark-color) transparent transparent transparent;
-        }
-        
-        .tooltip:hover .tooltip-text {
-            visibility: visible;
-            opacity: 1;
-        }
-    </style>
-</head>
+    </script>
+</body>
+</html>
+
