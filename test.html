@@ -1,0 +1,78 @@
+<!-- test.html -->
+<!--センサーのデータを取得するためのテストページ-->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>センサー接続テスト</title>
+</head>
+<body>
+    <h1>センサー接続テスト</h1>
+    
+    <div id="testControls">
+        <!-- <button onclick="testConnection()">接続テスト実行</button> -->
+        <button onclick="fetchSensorData()">センサーデータ取得</button>
+        <p id="status">状態: 未実行</p>
+        <pre id="result"></pre>
+    </div>
+
+    <div id="sensorData">
+        <h2>センサーデータ</h2>
+        <pre id="allSensors"></pre>
+        <pre id="webcamIds"></pre>
+    </div>
+
+    <script src="sensorManager.js"></script>
+    <script>
+        // GASのURL
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwWZP5CQ6sC23xbJCgFQE6_idIl9uo93IbpKwZ3hbRngauwzrV9dwQJy8h_eVuhITmtdQ/exec';
+        const sensorManager = new SensorManager(GAS_URL);
+        
+        // // 接続テスト
+        // async function testConnection() {
+        //     const statusElement = document.getElementById('status');
+        //     const resultElement = document.getElementById('result');
+            
+        //     statusElement.textContent = '接続テスト実行中...';
+        //     const result = await sensorManager.testConnection();
+            
+        //     statusElement.textContent = `状態: ${sensorManager.getStatus()}`;
+        //     resultElement.textContent = JSON.stringify(result, null, 2);
+        // }
+        
+        // センサーデータ取得
+        async function fetchSensorData() {
+   
+            try {
+                // データ取得
+                await sensorManager.fetchSensorStatus();
+                
+                // 全センサー情報を表示
+                const allSensors = sensorManager.getSensorDetails();
+                document.getElementById('allSensors').textContent = 
+                    JSON.stringify(allSensors, null, 2);
+                
+                // WebCam C920nのIDを表示
+                const webcamIds = sensorManager.getWebCamC920nIds();
+                document.getElementById('webcamIds').textContent = 
+                    JSON.stringify(webcamIds, null, 2);
+                
+                // コンソールにも出力
+                console.log('All sensor details:', allSensors);
+                console.log('WebCam C920n IDs:', webcamIds);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('allSensors').textContent = 'エラーが発生しました';
+            }
+        }
+
+        // ページ読み込み時に自動で接続テスト実行
+        window.addEventListener('load', testConnection);
+    </script>
+</body>
+</html>
+
+<!--テストのコマンド-->
+<!--
+http://localhost:8000/test.html
+-->
