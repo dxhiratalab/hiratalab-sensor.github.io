@@ -1,88 +1,46 @@
-<!-- test.html -->
-<!--センサーのデータを取得するためのテストページ-->
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>センサー接続テスト</title>
+    <title>空きセンサー確認</title>
 </head>
 <body>
-    <h1>センサー接続テスト</h1>
-    
-    <div id="testControls">
-        <button onclick="testConnection()">接続テスト実行</button>
-        <button onclick="fetchSensorData()">センサーデータ取得</button>
-        <p id="status">状態: 未実行</p>
-        <pre id="result"></pre>
-    </div>
-
-    <div id="sensorData">
-        <h2>センサーデータ</h2>
-        <pre id="allSensors"></pre>
-        <pre id="webcamIds"></pre>
-    </div>
+    <h1>空きセンサー一覧</h1>
+    <button onclick="updateSensorStatus()">更新</button>
+    <p id="status">状態: 未取得</p>
+    <pre id="sensorData"></pre>
 
     <script src="sensorManager.js"></script>
     <script>
-        // GASのURL
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwWZP5CQ6sC23xbJCgFQE6_idIl9uo93IbpKwZ3hbRngauwzrV9dwQJy8h_eVuhITmtdQ/exec';
-        const sensorManager = new SensorManager(GAS_URL);
-        
-        // 接続テスト
-        async function testConnection() {
-            const statusElement = document.getElementById('status');
-            const resultElement = document.getElementById('result');
-            
-            statusElement.textContent = '接続テスト実行中...';
-            const result = await sensorManager.testConnection();
-            
-            statusElement.textContent = `状態: ${sensorManager.getStatus()}`;
-            resultElement.textContent = JSON.stringify(result, null, 2);
-        }
-        
-        // センサーデータ取得
-        async function fetchSensorData() {
+        const manager = new SensorManager('https://script.google.com/macros/s/AKfycbybFSu-65PGxJickvD0xNabGHTQZPXVaf9ysxZZs0SqXnpKg4yzUUbexww2whtymudW/exec');
+
+        async function updateSensorStatus() {
             try {
-                statusElement.textContent = 'データ取得中...';
-                const data = await sensorManager.fetchSensorStatus();
-                //console.log(data);
-
-                //センサー詳細が取得できているか確認し、表示
+                //const statusElement = document.getElementById('status');
+                const dataElement = document.getElementById('sensorData');
                 
-                const sensorDetails = sensorManager.getSensorDetails();
+                //statusElement.textContent = '状態: 取得中...';
                 
-                console.log(sensorDetails);
-                //htmlにも取得できるているかを表示する
-                document.getElementById('sensorDetails').textContent = 
-                    JSON.stringify(sensorDetails, null, 2);
-
-
-                // // 全センサー情報を表示
-                // const allSensors = sensorManager.getSensorDetails();
-                // document.getElementById('allSensors').textContent = 
-                //     JSON.stringify(allSensors, null, 2);
+                // データ取得
+                const data = await manager.fetchSensorStatus();
+                // console.log(data);
+                // 取得したデータの表示
+                dataElement.textContent = JSON.stringify(data, null, 2);
                 
-                // // WebCam C920nのIDを表示
-                // const webcamIds = sensorManager.getWebCamC920nIds();
-                // document.getElementById('webcamIds').textContent = 
-                //     JSON.stringify(webcamIds, null, 2);
+                // 状態を更新
+                statusElement.textContent = `状態: ${manager.getStatus()}`;
                 
-                // // コンソールにも出力
-                // console.log('All sensor details:', allSensors);
-                // console.log('WebCam C920n IDs:', webcamIds);
+                // 空きセンサーデータを表示
+                const freeSensors = manager.getFreeSensors();
+                dataElement.textContent = JSON.stringify(freeSensors, null, 2);
+                
+                // デバッグ用にコンソールにも出力
+                console.log('空きセンサー:', freeSensors);
             } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('allSensors').textContent = 'エラーが発生しました';
+                console.error('エラー:', error);
+                document.getElementById('status').textContent = '状態: エラーが発生しました';
             }
         }
-
-        // ページ読み込み時に自動で接続テスト実行
-        window.addEventListener('load', testConnection);
     </script>
 </body>
 </html>
-
-<!--テストのコマンド-->
-<!--
-http://localhost:8001/test.html
--->
