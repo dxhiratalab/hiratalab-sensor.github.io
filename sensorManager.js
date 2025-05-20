@@ -11,7 +11,7 @@ class SensorManager {
             const response = await fetch(this.gasUrl);
             const data = await response.json();
             this.data = data;
-            this.status = '取得成功';
+            this.status = data.status === 'success' ? '取得成功' : '取得失敗';
             return data;
         } catch (error) {
             console.error('エラー:', error);
@@ -28,38 +28,30 @@ class SensorManager {
         return this.data;
     }
 
-    // データを整形して返すメソッド
     formatData() {
-        if (!this.data) return null;
+        if (!this.data || !this.data.sensors) return null;
         
-        if (Array.isArray(this.data)) {
-            return this.data.map(item => ({
-                ...item,
-                formatted: true
-            }));
-        }
-        
+        // センサータイプごとにグループ化
+        const groupedSensors = this.data.sensors.reduce((acc, sensor) => {
+            if (!acc[sensor.type]) {
+                acc[sensor.type] = [];
+            }
+            acc[sensor.type].push(sensor);
+            return acc;
+        }, {});
+
         return {
-            ...this.data,
-            formatted: true
+            summary: {
+                total: this.data.sensors.length,
+                updated: this.data.updated,
+                types: Object.keys(groupedSensors).length
+            },
+            sensorsByType: groupedSensors
         };
     }
 }
 
-// 使用例:
-// const sensorManager = new SensorManager('YOUR_GAS_SCRIPT_URL');
-// 
-// // データを取得する
-// await sensorManager.fetchSensorStatus();
-// 
-// // 状態を確認
-// console.log(sensorManager.getStatus());
-// 
-// // データを取得
-// console.log(sensorManager.getData());
-// 
-// // 整形されたデータを取得
-// console.log(sensorManager.formatData());
-
-// モジュールとしてエクスポート
-export default SensorManager; 
+// ブラウザ環境でも使えるようにグローバルに公開
+if (typeof window !== 'undefined') {
+    window.SensorManager = SensorManager;
+}

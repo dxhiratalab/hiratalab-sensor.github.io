@@ -2,462 +2,49 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>センサ管理システム</title>
-    <style>
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-            color: #333;
-        }
-        
-        .container {
-            max-width: 500px;
-            margin: 20px auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-        }
-        
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 20px;
-        }
-        
-        .step {
-            display: none;
-        }
-        
-        .step.active {
-            display: block;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-        
-        button {
-            display: block;
-            width: 100%;
-            padding: 12px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: background-color 0.3s;
-        }
-        
-        button:hover {
-            background-color: #2980b9;
-        }
-        
-        button:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-        }
-        
-        .status-box {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .status-available {
-            background-color: #e8f8f5;
-            border: 1px solid #82e0aa;
-        }
-        
-        .status-inuse {
-            background-color: #fdedec;
-            border: 1px solid #f5b7b1;
-        }
-        
-        .status-returning {
-            background-color: #eaf2f8;
-            border: 1px solid #aed6f1;
-        }
-        
-        .status-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-        
-        .status-text {
-            font-weight: bold;
-        }
-        
-        .available-icon {
-            background-color: #82e0aa;
-            color: white;
-        }
-        
-        .inuse-icon {
-            background-color: #f5b7b1;
-            color: white;
-        }
-        
-        .returning-icon {
-            background-color: #aed6f1;
-            color: white;
-        }
-        
-        .secondary-button {
-            background-color: #95a5a6;
-            margin-top: 10px;
-        }
-        
-        .secondary-button:hover {
-            background-color: #7f8c8d;
-        }
-        
-        .completion-message {
-            text-align: center;
-            padding: 20px 0;
-        }
-        
-        .completion-icon {
-            font-size: 48px;
-            color: #27ae60;
-            margin-bottom: 10px;
-        }
-        
-        .info-panel {
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            padding: 15px;
-            margin-top: 20px;
-        }
-        
-        .info-list {
-            list-style-type: none;
-            padding: 0;
-        }
-        
-        .info-list li {
-            padding: 5px 0;
-            border-bottom: 1px solid #ecf0f1;
-        }
-        
-        .info-list li:last-child {
-            border-bottom: none;
-        }
-        
-        .alert {
-            background-color: #fff3cd;
-            color: #856404;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-        }
-    </style>
+    <title>シンプルセンサー確認</title>
 </head>
 <body>
-    <div class="container">
-        <h1>センサ管理システム</h1>
-        
-        <!-- ステップ1: センサ情報入力 -->
-        <div class="step active" id="step1">
-            <h2>センサ情報</h2>
-            <div class="form-group">
-                <label for="sensorType">センサの種類</label>
-                <select id="sensorType">
-                    <option value="">選択してください</option>
-                    <option value="1">Panasonic 温度センサ</option>
-                    <option value="2">OMRON 圧力センサ</option>
-                    <option value="3">東京計器 流量センサ</option>
-                    <option value="4">Keyence 光センサ</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="sensorId">センサID</label>
-                <input type="text" id="sensorId" placeholder="例: S-1234">
-            </div>
-            
-            <button onclick="checkStatus()">確認</button>
-            <button class="secondary-button" onclick="showReturnMode()">センサを返却する</button>
+    <h1>センサー状態確認</h1>
+    
+    <!-- センサー状態確認セクション -->
+    <div id="sensorStatusStep">
+        <div class="status-container">
+            <p id="sensorStatus">状態: 未取得</p>
+            <pre id="sensorData"></pre>
         </div>
-        
-        <!-- ステップ2: ステータス確認と利用情報入力 -->
-        <div class="step" id="step2">
-            <div id="statusAvailable" style="display: none;">
-                <div class="status-box status-available">
-                    <div>
-                        <p>ステータス</p>
-                        <p class="status-text">利用可能</p>
-                    </div>
-                    <div class="status-icon available-icon">✓</div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="userName">お名前</label>
-                    <input type="text" id="userName" placeholder="例: 山田太郎">
-                </div>
-                
-                <div class="form-group">
-                    <label for="purpose">用途</label>
-                    <select id="purpose">
-                        <option value="">選択してください</option>
-                        <option value="1">実験</option>
-                        <option value="2">研究</option>
-                        <option value="3">デモ</option>
-                        <option value="4">授業</option>
-                    </select>
-                </div>
-                
-                <button onclick="registerUsage()">利用登録する</button>
-                <button class="secondary-button" onclick="resetForm()">戻る</button>
-            </div>
-            
-            <div id="statusInUse" style="display: none;">
-                <div class="status-box status-inuse">
-                    <div>
-                        <p>ステータス</p>
-                        <p class="status-text">使用中</p>
-                    </div>
-                    <div class="status-icon inuse-icon">!</div>
-                </div>
-                
-                <div class="alert">
-                    このセンサは現在使用中です。別のセンサを選択してください。
-                </div>
-                
-                <button onclick="resetForm()">戻る</button>
-            </div>
-            
-            <div id="statusReturning" style="display: none;">
-                <div class="status-box status-returning">
-                    <div>
-                        <p>ステータス</p>
-                        <p class="status-text">返却処理</p>
-                    </div>
-                    <div class="status-icon returning-icon">↔</div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="returnerName">お名前</label>
-                    <input type="text" id="returnerName" placeholder="例: 山田太郎">
-                </div>
-                
-                <button onclick="returnSensor()">返却する</button>
-                <button class="secondary-button" onclick="resetForm()">戻る</button>
-            </div>
-        </div>
-        
-        <!-- ステップ3: 完了画面 -->
-        <div class="step" id="step3">
-            <div id="registrationComplete" style="display: none;">
-                <div class="completion-message">
-                    <div class="completion-icon">✓</div>
-                    <h2>利用登録完了</h2>
-                    <p>センサの利用が登録されました。</p>
-                </div>
-                
-                <div class="info-panel">
-                    <h3>登録情報</h3>
-                    <ul class="info-list">
-                        <li>センサタイプ: <span id="summaryType"></span></li>
-                        <li>センサID: <span id="summaryId"></span></li>
-                        <li>利用者: <span id="summaryUser"></span></li>
-                        <li>用途: <span id="summaryPurpose"></span></li>
-                        <li>ステータス: <span>使用中</span></li>
-                    </ul>
-                </div>
-                
-                <button onclick="resetForm()">トップに戻る</button>
-            </div>
-            
-            <div id="returnComplete" style="display: none;">
-                <div class="completion-message">
-                    <div class="completion-icon">✓</div>
-                    <h2>返却完了</h2>
-                    <p>センサが正常に返却されました。</p>
-                </div>
-                
-                <div class="info-panel">
-                    <h3>返却情報</h3>
-                    <ul class="info-list">
-                        <li>センサタイプ: <span id="returnSummaryType"></span></li>
-                        <li>センサID: <span id="returnSummaryId"></span></li>
-                        <li>返却者: <span id="returnSummaryUser"></span></li>
-                        <li>ステータス: <span>利用可能</span></li>
-                    </ul>
-                </div>
-                
-                <button onclick="resetForm()">トップに戻る</button>
-            </div>
-        </div>
+        <button onclick="updateSensorStatus()">状態を更新</button>
     </div>
 
+    <!-- JavaScriptの読み込み -->
+    <!-- 先にクラス定義を読み込む -->
+    <script src="sensorManager.js"></script>
+    
+    <!-- その後でインスタンス化と関数定義を行う -->
     <script>
-        // センサタイプのデータ
-        const sensorTypes = [
-            { id: 1, name: 'Panasonic 温度センサ' },
-            { id: 2, name: 'OMRON 圧力センサ' },
-            { id: 3, name: '東京計器 流量センサ' },
-            { id: 4, name: 'Keyence 光センサ' }
-        ];
-        
-        // 用途のデータ
-        const purposeTypes = [
-            { id: 1, name: '実験' },
-            { id: 2, name: '研究' },
-            { id: 3, name: 'デモ' },
-            { id: 4, name: '授業' }
-        ];
-        
-        // isReturning フラグ
-        let isReturning = false;
-        
-        // ステップ表示関数
-        function showStep(stepNumber) {
-            document.querySelectorAll('.step').forEach(step => {
-                step.classList.remove('active');
-            });
-            document.getElementById('step' + stepNumber).classList.add('active');
-        }
-        
-        // ステータス確認
-        function checkStatus() {
-            const sensorType = document.getElementById('sensorType').value;
-            const sensorId = document.getElementById('sensorId').value;
-            
-            if (!sensorType || !sensorId) {
-                alert('センサの種類とIDを入力してください');
-                return;
+        // センサーマネージャーのインスタンスを作成
+        const sensorManager = new SensorManager('https://script.google.com/macros/s/AKfycbz-YnKqMRet8IaFHRsP_Nihc-D5BPdTL3ZCGbX9bJ5OvJ6VLyvteX81zk0zTDrGtOXwZw/exec');
+
+        // センサー状態を更新する関数
+        async function updateSensorStatus() {
+            try {
+                const statusElement = document.getElementById('sensorStatus');
+                const dataElement = document.getElementById('sensorData');
+                
+                statusElement.textContent = '状態: 取得中...';
+                
+                // データを取得
+                const data = await sensorManager.fetchSensorStatus();
+                
+                // 状態を更新
+                statusElement.textContent = `状態: ${sensorManager.getStatus()}`;
+                
+                // データを表示
+                dataElement.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                console.error('エラー:', error);
+                document.getElementById('sensorStatus').textContent = '状態: エラーが発生しました';
             }
-            
-            // モックの非同期操作（本番では実際のAPIを呼び出す）
-            setTimeout(() => {
-                showStep(2);
-                
-                // ランダムでステータスを決定（本番ではスプレッドシートから取得）
-                const mockStatus = Math.random() > 0.5 ? 'available' : 'in-use';
-                
-                if (mockStatus === 'available') {
-                    document.getElementById('statusAvailable').style.display = 'block';
-                    document.getElementById('statusInUse').style.display = 'none';
-                    document.getElementById('statusReturning').style.display = 'none';
-                } else {
-                    document.getElementById('statusAvailable').style.display = 'none';
-                    document.getElementById('statusInUse').style.display = 'block';
-                    document.getElementById('statusReturning').style.display = 'none';
-                }
-            }, 500);
-        }
-        
-        // 返却モードの表示
-        function showReturnMode() {
-            isReturning = true;
-            const sensorType = document.getElementById('sensorType').value;
-            const sensorId = document.getElementById('sensorId').value;
-            
-            if (!sensorType || !sensorId) {
-                alert('センサの種類とIDを入力してください');
-                return;
-            }
-            
-            showStep(2);
-            document.getElementById('statusAvailable').style.display = 'none';
-            document.getElementById('statusInUse').style.display = 'none';
-            document.getElementById('statusReturning').style.display = 'block';
-        }
-        
-        // 利用登録処理
-        function registerUsage() {
-            const userName = document.getElementById('userName').value;
-            const purpose = document.getElementById('purpose').value;
-            
-            if (!userName || !purpose) {
-                alert('お名前と用途を入力してください');
-                return;
-            }
-            
-            // モックの非同期操作（本番では実際のAPIを呼び出す）
-            setTimeout(() => {
-                showStep(3);
-                document.getElementById('registrationComplete').style.display = 'block';
-                document.getElementById('returnComplete').style.display = 'none';
-                
-                // 登録情報のサマリー
-                const sensorTypeId = document.getElementById('sensorType').value;
-                const sensorTypeName = sensorTypes.find(t => t.id == sensorTypeId)?.name || '';
-                const purposeId = document.getElementById('purpose').value;
-                const purposeName = purposeTypes.find(t => t.id == purposeId)?.name || '';
-                
-                document.getElementById('summaryType').textContent = sensorTypeName;
-                document.getElementById('summaryId').textContent = document.getElementById('sensorId').value;
-                document.getElementById('summaryUser').textContent = userName;
-                document.getElementById('summaryPurpose').textContent = purposeName;
-            }, 500);
-        }
-        
-        // センサ返却処理
-        function returnSensor() {
-            const returnerName = document.getElementById('returnerName').value;
-            
-            if (!returnerName) {
-                alert('お名前を入力してください');
-                return;
-            }
-            
-            // モックの非同期操作（本番では実際のAPIを呼び出す）
-            setTimeout(() => {
-                showStep(3);
-                document.getElementById('registrationComplete').style.display = 'none';
-                document.getElementById('returnComplete').style.display = 'block';
-                
-                // 返却情報のサマリー
-                const sensorTypeId = document.getElementById('sensorType').value;
-                const sensorTypeName = sensorTypes.find(t => t.id == sensorTypeId)?.name || '';
-                
-                document.getElementById('returnSummaryType').textContent = sensorTypeName;
-                document.getElementById('returnSummaryId').textContent = document.getElementById('sensorId').value;
-                document.getElementById('returnSummaryUser').textContent = returnerName;
-            }, 500);
-        }
-        
-        // フォームのリセット
-        function resetForm() {
-            document.getElementById('sensorType').value = '';
-            document.getElementById('sensorId').value = '';
-            document.getElementById('userName').value = '';
-            document.getElementById('purpose').value = '';
-            document.getElementById('returnerName').value = '';
-            
-            isReturning = false;
-            
-            showStep(1);
         }
     </script>
 </body>
