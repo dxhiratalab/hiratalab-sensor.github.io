@@ -1,11 +1,51 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>センサ管理テストページ</title>
+    <meta charset="UTF-8">
+    <title>シンプルセンサー確認</title>
 </head>
 <body>
-  <h1>これはテストページです</h1>
-  <p>GitHub Pagesから公開されています。</p>
+    <h1>センサー状態確認</h1>
+    
+    <!-- センサー状態確認セクション -->
+    <div id="sensorStatusStep">
+        <div class="status-container">
+            <p id="sensorStatus">状態: 未取得</p>
+            <pre id="sensorData"></pre>
+        </div>
+        <button onclick="updateSensorStatus()">状態を更新</button>
+    </div>
+
+    <!-- JavaScriptの読み込み -->
+    <!-- 先にクラス定義を読み込む -->
+    <script src="sensorManager.js"></script>
+    
+    <!-- その後でインスタンス化と関数定義を行う -->
+    <script>
+        // センサーマネージャーのインスタンスを作成
+        const sensorManager = new SensorManager('https://script.google.com/macros/s/AKfycbz-YnKqMRet8IaFHRsP_Nihc-D5BPdTL3ZCGbX9bJ5OvJ6VLyvteX81zk0zTDrGtOXwZw/exec');
+
+        // センサー状態を更新する関数
+        async function updateSensorStatus() {
+            try {
+                const statusElement = document.getElementById('sensorStatus');
+                const dataElement = document.getElementById('sensorData');
+                
+                statusElement.textContent = '状態: 取得中...';
+                
+                // データを取得
+                const data = await sensorManager.fetchSensorStatus();
+                
+                // 状態を更新
+                statusElement.textContent = `状態: ${sensorManager.getStatus()}`;
+                
+                // データを表示
+                dataElement.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                console.error('エラー:', error);
+                document.getElementById('sensorStatus').textContent = '状態: エラーが発生しました';
+            }
+        }
+    </script>
 </body>
 </html>
