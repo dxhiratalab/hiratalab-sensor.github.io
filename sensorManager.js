@@ -10,8 +10,14 @@ class SensorManager {
 
     async fetchSensorStatus() {
         try {
+            //取得中という言葉を表示する
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = '取得中...';
+
             this.status = '取得中...';
+            //statusElement.textContent = '取得中...';
             const response = await fetch(this.gasUrl);
+            
             const data = await response.json();
             
             // 受け取ったデータをログ出力して確認
@@ -22,6 +28,7 @@ class SensorManager {
             this.sensorDetails = data;  // この時点でallSensorDetailsが入っている
             
             this.status = '取得成功';
+        
             return data;
         } catch (error) {
             console.error('エラー:', error);
@@ -32,6 +39,7 @@ class SensorManager {
 
     // センサー詳細を取得するメソッドを追加
     getSensorDetails() {
+
         return this.sensorDetails;
     }
 

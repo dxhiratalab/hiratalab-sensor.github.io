@@ -10,7 +10,7 @@
     <h1>センサー接続テスト</h1>
     
     <div id="testControls">
-        <!-- <button onclick="testConnection()">接続テスト実行</button> -->
+        <button onclick="testConnection()">接続テスト実行</button>
         <button onclick="fetchSensorData()">センサーデータ取得</button>
         <p id="status">状態: 未実行</p>
         <pre id="result"></pre>
@@ -28,38 +28,48 @@
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbwWZP5CQ6sC23xbJCgFQE6_idIl9uo93IbpKwZ3hbRngauwzrV9dwQJy8h_eVuhITmtdQ/exec';
         const sensorManager = new SensorManager(GAS_URL);
         
-        // // 接続テスト
-        // async function testConnection() {
-        //     const statusElement = document.getElementById('status');
-        //     const resultElement = document.getElementById('result');
+        // 接続テスト
+        async function testConnection() {
+            const statusElement = document.getElementById('status');
+            const resultElement = document.getElementById('result');
             
-        //     statusElement.textContent = '接続テスト実行中...';
-        //     const result = await sensorManager.testConnection();
+            statusElement.textContent = '接続テスト実行中...';
+            const result = await sensorManager.testConnection();
             
-        //     statusElement.textContent = `状態: ${sensorManager.getStatus()}`;
-        //     resultElement.textContent = JSON.stringify(result, null, 2);
-        // }
+            statusElement.textContent = `状態: ${sensorManager.getStatus()}`;
+            resultElement.textContent = JSON.stringify(result, null, 2);
+        }
         
         // センサーデータ取得
         async function fetchSensorData() {
-   
             try {
-                // データ取得
-                await sensorManager.fetchSensorStatus();
+                statusElement.textContent = 'データ取得中...';
+                const data = await sensorManager.fetchSensorStatus();
+                //console.log(data);
+
+                //センサー詳細が取得できているか確認し、表示
                 
-                // 全センサー情報を表示
-                const allSensors = sensorManager.getSensorDetails();
-                document.getElementById('allSensors').textContent = 
-                    JSON.stringify(allSensors, null, 2);
+                const sensorDetails = sensorManager.getSensorDetails();
                 
-                // WebCam C920nのIDを表示
-                const webcamIds = sensorManager.getWebCamC920nIds();
-                document.getElementById('webcamIds').textContent = 
-                    JSON.stringify(webcamIds, null, 2);
+                console.log(sensorDetails);
+                //htmlにも取得できるているかを表示する
+                document.getElementById('sensorDetails').textContent = 
+                    JSON.stringify(sensorDetails, null, 2);
+
+
+                // // 全センサー情報を表示
+                // const allSensors = sensorManager.getSensorDetails();
+                // document.getElementById('allSensors').textContent = 
+                //     JSON.stringify(allSensors, null, 2);
                 
-                // コンソールにも出力
-                console.log('All sensor details:', allSensors);
-                console.log('WebCam C920n IDs:', webcamIds);
+                // // WebCam C920nのIDを表示
+                // const webcamIds = sensorManager.getWebCamC920nIds();
+                // document.getElementById('webcamIds').textContent = 
+                //     JSON.stringify(webcamIds, null, 2);
+                
+                // // コンソールにも出力
+                // console.log('All sensor details:', allSensors);
+                // console.log('WebCam C920n IDs:', webcamIds);
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('allSensors').textContent = 'エラーが発生しました';
@@ -74,5 +84,5 @@
 
 <!--テストのコマンド-->
 <!--
-http://localhost:8000/test.html
+http://localhost:8001/test.html
 -->
