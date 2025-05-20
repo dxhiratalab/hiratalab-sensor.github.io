@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>センサ管理システム - カメラ利用登録</title>
+    <title>センサ管理システム - 温度センサ利用登録</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -189,32 +189,32 @@
 </head>
 <body>
     <div class="container">
-        <h1>カメラ利用登録</h1>
-        <div class="sensor-icon">📷</div>
+        <h1>温度センサ利用登録</h1>
+        <div class="sensor-icon">🌡️</div>
         
         <!-- ステップ1: センサ情報入力 -->
         <div class="step active" id="step1">
-            <h2 id="step1Title">カメラ利用登録</h2>
+            <h2 id="step1Title">温度センサ利用登録</h2>
             <div class="form-group">
                 <label for="sensorType">メーカー</label>
                 <select id="sensorType" onchange="isReturning ? updateReturnableSensorIds() : updateSensorIds()">
                     <option value="">選択してください</option>
-                    <option value="1">Canon</option>
-                    <option value="2">Nikon</option>
-                    <option value="3">Sony</option>
-                    <option value="4">Panasonic</option>
+                    <option value="1">Panasonic</option>
+                    <option value="2">OMRON</option>
+                    <option value="3">KEYENCE</option>
+                    <option value="4">Mitsubishi</option>
                 </select>
             </div>
             
             <div class="form-group">
-                <label for="sensorId">カメラID</label>
+                <label for="sensorId">温度センサID</label>
                 <select id="sensorId" disabled>
                     <option value="">メーカーを先に選択してください</option>
                 </select>
             </div>
             
             <button id="checkButton" onclick="checkStatus()">確認</button>
-            <button id="returnButton" class="secondary-button" onclick="showReturnMode()">カメラを返却する</button>
+            <button id="returnButton" class="secondary-button" onclick="showReturnMode()">温度センサを返却する</button>
         </div>
         
         <!-- ステップ2: ステータス確認と利用情報入力 -->
@@ -252,7 +252,7 @@
                 </div>
                 
                 <div class="alert">
-                    このカメラは現在使用中です。別のカメラを選択してください。
+                    この温度センサは現在使用中です。別の温度センサを選択してください。
                 </div>
                 
                 <button onclick="resetForm()">戻る</button>
@@ -283,14 +283,14 @@
                 <div class="completion-message">
                     <div class="completion-icon">✓</div>
                     <h2>利用登録完了</h2>
-                    <p>カメラの利用が登録されました。</p>
+                    <p>温度センサの利用が登録されました。</p>
                 </div>
                 
                 <div class="info-panel">
                     <h3>登録情報</h3>
                     <ul class="info-list">
                         <li>メーカー: <span id="summaryType"></span></li>
-                        <li>カメラID: <span id="summaryId"></span></li>
+                        <li>温度センサID: <span id="summaryId"></span></li>
                         <li>利用者: <span id="summaryUser"></span></li>
                         <li>用途: <span id="summaryPurpose"></span></li>
                         <li>ステータス: <span>使用中</span></li>
@@ -304,14 +304,14 @@
                 <div class="completion-message">
                     <div class="completion-icon">✓</div>
                     <h2>返却完了</h2>
-                    <p>カメラが正常に返却されました。</p>
+                    <p>温度センサが正常に返却されました。</p>
                 </div>
                 
                 <div class="info-panel">
                     <h3>返却情報</h3>
                     <ul class="info-list">
                         <li>メーカー: <span id="returnSummaryType"></span></li>
-                        <li>カメラID: <span id="returnSummaryId"></span></li>
+                        <li>温度センサID: <span id="returnSummaryId"></span></li>
                         <li>返却者: <span id="returnSummaryUser"></span></li>
                         <li>ステータス: <span>利用可能</span></li>
                     </ul>
@@ -325,34 +325,32 @@
     <script>
         // センサタイプ（メーカー）のデータ
         const sensorTypes = [
-            { id: 1, name: 'Canon' },
-            { id: 2, name: 'Nikon' },
-            { id: 3, name: 'Sony' },
-            { id: 4, name: 'Panasonic' }
+            { id: 1, name: 'Panasonic' },
+            { id: 2, name: 'OMRON' },
+            { id: 3, name: 'KEYENCE' },
+            { id: 4, name: 'Mitsubishi' }
         ];
         
-        // センサID（カメラID）のデータ（メーカーIDに対応）
+        // センサID（温度センサID）のデータ（メーカーIDに対応）
         const sensorIds = {
             '1': [
-                { id: 'C001', status: 'available', model: 'EOS R5' },
-                { id: 'C002', status: 'in-use', model: 'EOS R6' },
-                { id: 'C003', status: 'available', model: 'EOS 5D Mark IV' },
-                { id: 'C004', status: 'available', model: 'EOS 90D' }
+                { id: 'TP-PA-001', status: 'available', model: '高精度サーミスタ' },
+                { id: 'TP-PA-002', status: 'in-use', model: '防水型熱電対' },
+                { id: 'TP-PA-003', status: 'available', model: '熱電対センサ' }
             ],
             '2': [
-                { id: 'N001', status: 'available', model: 'Z6 II' },
-                { id: 'N002', status: 'available', model: 'Z7 II' },
-                { id: 'N003', status: 'in-use', model: 'D850' }
+                { id: 'TP-OM-001', status: 'available', model: 'E52-CA' },
+                { id: 'TP-OM-002', status: 'available', model: 'E52-EL' },
+                { id: 'TP-OM-003', status: 'in-use', model: 'ES1B' }
             ],
             '3': [
-                { id: 'S001', status: 'in-use', model: 'α7 III' },
-                { id: 'S002', status: 'available', model: 'α7R IV' },
-                { id: 'S003', status: 'available', model: 'α6600' }
+                { id: 'TP-KY-001', status: 'in-use', model: 'FT-H30' },
+                { id: 'TP-KY-002', status: 'available', model: 'FT-55' }
             ],
             '4': [
-                { id: 'P001', status: 'available', model: 'LUMIX S5' },
-                { id: 'P002', status: 'in-use', model: 'LUMIX GH5' },
-                { id: 'P003', status: 'available', model: 'LUMIX G9' }
+                { id: 'TP-MT-001', status: 'available', model: 'TY7800' },
+                { id: 'TP-MT-002', status: 'in-use', model: 'TY7810' },
+                { id: 'TP-MT-003', status: 'available', model: 'TY7820' }
             ]
         };
         
@@ -391,7 +389,7 @@
             if (availableIds.length === 0) {
                 const noOption = document.createElement('option');
                 noOption.value = '';
-                noOption.textContent = '利用可能なカメラはありません';
+                noOption.textContent = '利用可能な温度センサはありません';
                 noOption.disabled = true;
                 sensorIdSelect.appendChild(noOption);
             } else {
@@ -441,7 +439,7 @@
             if (inUseIds.length === 0) {
                 const noOption = document.createElement('option');
                 noOption.value = '';
-                noOption.textContent = '返却可能なカメラはありません';
+                noOption.textContent = '返却可能な温度センサはありません';
                 noOption.disabled = true;
                 sensorIdSelect.appendChild(noOption);
             } else {
@@ -467,7 +465,7 @@
             const sensorId = sensorIdSelect.value;
             
             if (!sensorType || !sensorId) {
-                alert('メーカーとカメラIDを選択してください');
+                alert('メーカーと温度センサIDを選択してください');
                 return;
             }
             
@@ -506,7 +504,7 @@
             updateReturnableSensorIds();
             
             // 返却モードビューに切り替え
-            document.getElementById('step1Title').textContent = 'カメラ返却';
+            document.getElementById('step1Title').textContent = '温度センサ返却';
             document.getElementById('checkButton').textContent = '返却確認';
             document.getElementById('returnButton').style.display = 'none';
         }
@@ -573,7 +571,7 @@
             document.getElementById('returnerName').value = '';
             
             isReturning = false;
-            document.getElementById('step1Title').textContent = 'カメラ利用登録';
+            document.getElementById('step1Title').textContent = '温度センサ利用登録';
             document.getElementById('checkButton').textContent = '確認';
             document.getElementById('returnButton').style.display = 'block';
             
