@@ -100,11 +100,22 @@
         .returning-icon { background-color: #aed6f1; color: white; }
         .completion-message { text-align: center; padding: 20px 0; }
         .completion-icon { font-size: 48px; color: #27ae60; margin-bottom: 10px; }
+        .error-message { text-align: center; padding: 20px 0; color: #c0392b; }
+        .error-icon { font-size: 48px; color: #c0392b; margin-bottom: 10px; }
         .info-panel { background-color: #f8f9fa; border-radius: 4px; padding: 15px; margin-top: 20px; }
         .info-list { list-style-type: none; padding: 0; }
         .info-list li { padding: 5px 0; border-bottom: 1px solid #ecf0f1; }
         .info-list li:last-child { border-bottom: none; }
-        .alert { background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 4px; margin-bottom: 15px; }
+        .alert-message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;}
+        .alert-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;}
+        .alert-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb;}
+
         .choice-buttons { display: flex; gap: 10px; margin: 20px 0; }
         .choice-button {
             flex: 1; padding: 20px; border-radius: 8px; text-align: center;
@@ -119,7 +130,6 @@
             text-align: center; padding: 20px; background-color: #f8f9fa;
             border-radius: 8px; color: #7f8c8d; margin: 20px 0;
         }
-        /* QRコード用のスタイル */
         #qrcode {
             width: 128px;
             height: 128px;
@@ -128,276 +138,584 @@
             padding: 5px;
             border-radius: 8px;
         }
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; color: #333; } .container { max-width: 500px; margin: 20px auto; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); padding: 20px; } h1, h2 { color: #2c3e50; margin-bottom: 20px; } .sensor-icon { font-size: 48px; text-align: center; margin-bottom: 20px; } .step { display: none; } .step.active { display: block; } .form-group { margin-bottom: 15px; } label { display: block; margin-bottom: 5px; font-weight: bold; } input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 16px; } button { display: block; width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 10px; transition: background-color 0.3s; } button:hover { background-color: #2980b9; } button:disabled { background-color: #95a5a6; cursor: not-allowed; } .secondary-button { background-color: #95a5a6; margin-top: 10px; } .secondary-button:hover { background-color: #7f8c8d; } .status-box { padding: 15px; margin-bottom: 20px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; } .status-available { background-color: #e8f8f5; border: 1px solid #82e0aa; } .status-inuse { background-color: #fdedec; border: 1px solid #f5b7b1; } .status-returning { background-color: #eaf2f8; border: 1px solid #aed6f1; } .status-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; } .status-text { font-weight: bold; } .available-icon { background-color: #82e0aa; color: white; } .inuse-icon { background-color: #f5b7b1; color: white; } .returning-icon { background-color: #aed6f1; color: white; } .completion-message { text-align: center; padding: 20px 0; } .completion-icon { font-size: 48px; color: #27ae60; margin-bottom: 10px; } .info-panel { background-color: #f8f9fa; border-radius: 4px; padding: 15px; margin-top: 20px; } .info-list { list-style-type: none; padding: 0; } .info-list li { padding: 5px 0; border-bottom: 1px solid #ecf0f1; } .info-list li:last-child { border-bottom: none; } .choice-buttons { display: flex; gap: 10px; margin: 20px 0; } .choice-button { flex: 1; padding: 20px; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.3s; } .choice-button.borrow { background-color: #e8f8f5; border: 2px solid #82e0aa; color: #27ae60; } .choice-button.borrow:hover { background-color: #d1f2e4; transform: translateY(-3px); } .choice-button.return { background-color: #eaf2f8; border: 2px solid #aed6f1; color: #3498db; } .choice-button.return:hover { background-color: #d6e9f9; transform: translateY(-3px); } .choice-icon { font-size: 32px; margin-bottom: 10px; } .no-sensors-message { text-align: center; padding: 20px; background-color: #f8f9fa; border-radius: 8px; color: #7f8c8d; margin: 20px 0; } #qrcode { width: 128px; height: 128px; margin: 20px auto; border: 1px solid #ddd; padding: 5px; border-radius: 8px; }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .note { font-size: 0.9em; color: #666; margin-top: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <p>データを読み込んでいます...</p>
-    </div>
+        <p>データを読み込んでいます...</p> </div>
 
     <script src="sensorManager.js"></script>
     <script>
         // --- グローバル変数 ---
-        let sensorData = {};
-        let currentSensorTypeKey;
-        let currentSensorInfo;
-        let selectedReturnSensor = null;
+        let allSensorRawData = []; // GASから取得した生の全センサーデータ (freeとinuseを結合)
+        let sensorDataForUI = {};  // UI表示用に変換したデータ (transformData後の形式)
+        let currentSensorTypeKey;  // 表示中のセンサータイプキー (例: "camera")
+        let currentSensorInfoForUI; // 表示中のセンサータイプのUI用詳細情報 (sensorDataForUI[currentSensorTypeKey])
+        let selectedReturnSensor = null; // 返却対象として選択されたセンサーオブジェクト (UI用)
+        let sensorManagerInstance;
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyo7WCmt1DTmQ9rrIHo4zDmBnRkk0oBG1s0IcNDVr-dYywKpSJavBalIpIZiQvuQQhizw/exec';
 
-        // データ形式の変換関数 (前回作成したものをそのまま使用)
-        function transformData(newData) {
-            const oldData = {};
+        // データ形式の変換関数 (UI表示用)
+        function transformDataForUI(rawDataArray) {
+            const uiData = {};
             const typeDetails = {
                 'CAMERA': { name: 'カメラ', icon: '📷' },
                 'LIDAR': { name: 'LiDAR', icon: '📡' },
                 'IMU': { name: 'IMUセンサ', icon: '🧭' },
                 'MOTOR': { name: 'モーター', icon: '⚙️' },
             };
-            newData.forEach((sensor, index) => {
-                if (!sensor.type || !sensor.model || !sensor.status) { return; }
-                const typeKey = sensor.type.toLowerCase();
-                const details = typeDetails[sensor.type] || { name: sensor.type, icon: '❓' };
-                if (!oldData[typeKey]) { oldData[typeKey] = { name: details.name, icon: details.icon, manufacturers: [], sensors: [] }; }
-                let manufacturer = oldData[typeKey].manufacturers.find(m => m.name === sensor.company);
-                if (!manufacturer && sensor.company) {
-                    manufacturer = { id: oldData[typeKey].manufacturers.length + 1, name: sensor.company };
-                    oldData[typeKey].manufacturers.push(manufacturer);
+
+            if (!Array.isArray(rawDataArray)) {
+                console.error("transformDataForUI: rawDataArray is not an array", rawDataArray);
+                return uiData;
+            }
+
+            rawDataArray.forEach((sensor) => {
+                // GASからのデータに必要なプロパティがあるか確認
+                if (!sensor.type || !sensor.model || !sensor.status || !sensor.id) {
+                    console.warn("Skipping sensor due to missing properties:", sensor);
+                    return;
                 }
-                const uniqueId = `${typeKey.charAt(0).toUpperCase()}${sensor.id || index}`;
-                const newSensor = {
-                    id: uniqueId, model: sensor.model, status: sensor.status === 'free' ? 'available' : 'in-use',
-                    manufacturerId: manufacturer ? manufacturer.id : null, user: null, purpose: null
+                const typeKey = sensor.type.toLowerCase(); // "camera", "lidar" など
+                const details = typeDetails[sensor.type.toUpperCase()] || { name: sensor.type, icon: '❓' };
+
+                if (!uiData[typeKey]) {
+                    uiData[typeKey] = { name: details.name, icon: details.icon, manufacturers: [], sensors: [] };
+                }
+
+                let manufacturer = uiData[typeKey].manufacturers.find(m => m.name === sensor.company);
+                if (!manufacturer && sensor.company) {
+                    manufacturer = { id: uiData[typeKey].manufacturers.length + 1, name: sensor.company };
+                    uiData[typeKey].manufacturers.push(manufacturer);
+                }
+
+                // GASからのステータス名をUI用のステータス名に変換
+                let uiStatus = 'unknown';
+                if (sensor.status) {
+                    const statusLower = sensor.status.toLowerCase();
+                    if (statusLower === 'free') uiStatus = 'available';
+                    else if (statusLower === 'in use') uiStatus = 'in-use';
+                    else uiStatus = statusLower; // その他のステータスはそのまま
+                }
+                
+                const uiSensor = {
+                    id: sensor.id, // GASからのIDをそのまま使用
+                    model: sensor.model,
+                    status: uiStatus,
+                    manufacturerId: manufacturer ? manufacturer.id : null,
+                    // GASから user, purpose は来ないので、UI側で管理する場合は別途考慮が必要
+                    // 現状では、これらの情報はGASに永続化されない
+                    user: sensor.user || null, // GASからもしあれば。なければnull
+                    purpose: sensor.purpose || null, // GASからもしあれば。なければnull
+                    originalType: sensor.type // GASに送るための元のタイプ名 (大文字)
                 };
-                oldData[typeKey].sensors.push(newSensor);
+                uiData[typeKey].sensors.push(uiSensor);
             });
-            return oldData;
+            return uiData;
         }
 
-        // --- 初期化処理 (GAS対応に変更) ---
+        // --- 初期化処理 ---
         window.onload = async function() {
             const container = document.querySelector('.container');
             const params = new URLSearchParams(window.location.search);
-            currentSensorTypeKey = params.get('type');
+            currentSensorTypeKey = params.get('type'); // "camera", "lidar" など
 
             if (!currentSensorTypeKey) {
-                container.innerHTML = '<h1>エラー: センサタイプが指定されていません</h1>';
+                container.innerHTML = '<h1>エラー: センサタイプが指定されていません</h1><button onclick="window.location.href=\'index.html\'">トップに戻る</button>';
                 return;
             }
 
-            const GAS_URL = 'https://script.google.com/macros/s/AKfycbyo7WCmt1DTmQ9rrIHo4zDmBnRkk0oBG1s0IcNDVr-dYywKpSJavBalIpIZiQvuQQhizw/exec';
-            const sensorManager = new SensorManager(GAS_URL);
-            
-            try {
-                // sensorManager を使ってGASからデータを取得
-                const newRawData = await sensorManager.fetchSensorStatus();
-                
-                // 取得したデータを既存の形式に変換
-                sensorData = transformData(newRawData);
-                
-                if (!sensorData[currentSensorTypeKey]) {
-                   throw new Error('Invalid sensor type in data.json');
-                }
-                currentSensorInfo = sensorData[currentSensorTypeKey];
-                document.title = `センサ管理システム - ${currentSensorInfo.name}利用登録`;
-                
-                // ページを構築
-                buildPage();
+            sensorManagerInstance = new SensorManager(GAS_URL);
+            container.innerHTML = '<div class="loader"></div><p style="text-align:center;">センサー情報を読み込み中...</p>';
 
+            try {
+                allSensorRawData = await sensorManagerInstance.fetchSensorStatus(); // freeとinuseを結合したリスト
+                sensorDataForUI = transformDataForUI(allSensorRawData);
+
+                if (!sensorDataForUI[currentSensorTypeKey] || !sensorDataForUI[currentSensorTypeKey].sensors) {
+                   console.error('Invalid sensor type or no sensors for type:', currentSensorTypeKey, sensorDataForUI);
+                   throw new Error('指定されたタイプのセンサーデータが見つかりません。');
+                }
+                currentSensorInfoForUI = sensorDataForUI[currentSensorTypeKey];
+                document.title = `センサ管理システム - ${currentSensorInfoForUI.name}利用登録`;
+                buildPage();
             } catch (error) {
-                console.error('Error:', error);
-                container.innerHTML = '<h1>エラー: データの読み込み、または解析に失敗しました</h1>';
+                console.error('初期化エラー:', error);
+                container.innerHTML = `<h1>エラー</h1><p>データの読み込みに失敗しました。<br>${error.message}</p><button onclick="window.location.href='index.html'">トップに戻る</button>`;
             }
         };
 
-        // --- ページ構築 (以降のコードは変更なし) ---
+        // --- ページ構築 ---
         function buildPage() {
             const container = document.querySelector('.container');
-            const sensorName = currentSensorInfo.name;
+            const sensorName = currentSensorInfoForUI.name;
 
-            container.innerHTML = `
+            let messageContainer = document.getElementById('messageContainer');
+            if (!messageContainer) {
+                messageContainer = document.createElement('div');
+                messageContainer.id = 'messageContainer';
+                // container の先頭に追加する前に、既存のinnerHTMLをクリアしないようにする
+            }
+            messageContainer.innerHTML = ''; // メッセージをクリア
+
+            // 既存のコンテンツをクリアしてから新しい要素を追加
+            container.innerHTML = ''; // ここでクリア
+            container.appendChild(messageContainer); // メッセージコンテナを再追加
+
+            const contentDiv = document.createElement('div');
+            contentDiv.innerHTML = `
                 <h1>${sensorName}管理</h1>
-                <div class="sensor-icon">${currentSensorInfo.icon}</div>
-                <div id="qrcode-container"><p style="text-align:center; color:#666; margin-bottom:5px;">このページのQRコード</p><div id="qrcode"></div></div>
+                <div class="sensor-icon">${currentSensorInfoForUI.icon}</div>
+                <div id="qrcode-container" style="margin-bottom: 20px;"><p style="text-align:center; color:#666; margin-bottom:5px;">このページのQRコード</p><div id="qrcode"></div></div>
+
                 <div class="step active" id="step0">
                     <h2>操作を選択してください</h2>
                     <div class="choice-buttons">
                         <div class="choice-button borrow" onclick="showStep(1)"><div class="choice-icon">📥</div><div class="choice-title">利用登録</div><div class="choice-desc">${sensorName}を借りる</div></div>
                         <div class="choice-button return" onclick="showStep('0_5')"><div class="choice-icon">📤</div><div class="choice-title">返却登録</div><div class="choice-desc">${sensorName}を返す</div></div>
                     </div>
+                    <button class="secondary-button" onclick="window.location.href='index.html'" style="margin-top:20px;">種類一覧に戻る</button>
                 </div>
-                <div class="step" id="step0_5">
-                    <h2>返却登録</h2><p>お名前を入力してください。登録されている使用中の${sensorName}を検索します。</p>
-                    <div class="form-group"><label for="returnSearchName">お名前</label><input type="text" id="returnSearchName" placeholder="例: 山田太郎"></div>
-                    <button onclick="searchUserSensors()">検索</button><button class="secondary-button" onclick="resetForm()">戻る</button>
+
+                <div class="step" id="step0_5"> <h2>返却登録</h2><p>お名前を入力してください。<br><span class="note">（この名前はセンサーの検索にのみ使用され、記録されません）</span></p>
+                    <div class="form-group"><label for="returnSearchName">お名前（検索用）</label><input type="text" id="returnSearchName" placeholder="例: 山田太郎"></div>
+                    <button onclick="searchUserSensors()">検索</button>
+                    <button class="secondary-button" onclick="resetForm()">戻る</button>
                 </div>
-                <div class="step" id="step0_6">
-                    <h2>返却する${sensorName}を選択</h2><p><span id="returnerNameDisplay"></span>さんが使用中の${sensorName}</p>
+
+                <div class="step" id="step0_6"> <h2>返却する${sensorName}を選択</h2><p><span id="returnerNameDisplay"></span>さんが使用中と思われる${sensorName}（ローカル情報）</p>
                     <div id="userSensorsContainer"></div>
-                    <div class="form-group" id="userSensorSelectContainer" style="display: none;"><label for="userSensorSelect">返却する${sensorName}</label><select id="userSensorSelect"><option value="">選択してください</option></select></div>
-                    <button id="confirmReturnButton" onclick="confirmReturn()" style="display: none;">返却手続きへ</button><button class="secondary-button" onclick="resetForm()">戻る</button>
+                    <div class="form-group" id="userSensorSelectContainer" style="display: none;">
+                        <label for="userSensorSelect">返却する${sensorName}</label>
+                        <select id="userSensorSelect"><option value="">選択してください</option></select>
+                    </div>
+                    <button id="confirmReturnButton" onclick="confirmReturn()" style="display: none;">返却手続きへ</button>
+                    <button class="secondary-button" onclick="showStep('0_5')">名前再入力</button>
+                    <button class="secondary-button" onclick="resetForm()">トップに戻る</button>
                 </div>
-                <div class="step" id="step1">
-                    <h2>${sensorName}利用登録</h2>
+
+                <div class="step" id="step1"> <h2>${sensorName}利用登録</h2>
                     <div class="form-group"><label for="sensorMaker">メーカー</label><select id="sensorMaker" onchange="updateSensorIds()"><option value="">選択してください</option></select></div>
                     <div class="form-group"><label for="sensorId">${sensorName}ID</label><select id="sensorId" disabled><option value="">メーカーを先に選択してください</option></select></div>
-                    <button onclick="checkStatus()">確認</button><button class="secondary-button" onclick="resetForm()">戻る</button>
+                    <button onclick="checkBorrowStatus()">利用状況確認</button>
+                    <button class="secondary-button" onclick="resetForm()">戻る</button>
                 </div>
-                <div class="step" id="step2">
-                    <div id="statusAvailable" style="display: none;">
-                        <div class="status-box status-available"><div><p>ステータス</p><p class="status-text">利用可能</p></div><div class="status-icon available-icon">✓</div></div>
-                        <div class="form-group"><label for="userName">お名前</label><input type="text" id="userName" placeholder="例: 山田太郎"></div>
-                        <div class="form-group"><label for="purpose">用途</label><input type="text" id="purpose" placeholder="例: 実験、研究など"></div>
-                        <button onclick="registerUsage()">利用登録する</button><button class="secondary-button" onclick="resetForm()">戻る</button>
+
+                <div class="step" id="step2"> <div id="statusAvailable" style="display: none;"> <div class="status-box status-available"><div><p>ステータス</p><p class="status-text">利用可能</p></div><div class="status-icon available-icon">✓</div></div>
+                        <div class="form-group"><label for="userName">お名前（記録されません）</label><input type="text" id="userName" placeholder="例: 山田太郎"></div>
+                        <div class="form-group"><label for="purpose">用途（記録されません）</label><input type="text" id="purpose" placeholder="例: 実験、研究など"></div>
+                        <p class="note">入力されたお名前と用途はシステムには記録されず、ステータスのみが更新されます。</p>
+                        <button onclick="registerUsage()" id="registerUsageButton">利用登録する (ステータス更新)</button>
+                        <button class="secondary-button" onclick="showStep(1)">選び直す</button>
                     </div>
-                    <div id="statusReturning" style="display: none;">
-                        <div class="status-box status-returning"><div><p>ステータス</p><p class="status-text">返却処理</p></div><div class="status-icon returning-icon">↔</div></div>
+                    <div id="statusReturning" style="display: none;"> <div class="status-box status-returning"><div><p>ステータス</p><p class="status-text">返却処理</p></div><div class="status-icon returning-icon">↔</div></div>
                         <div class="info-panel">
-                            <h3>返却情報</h3>
+                            <h3>返却対象センサー</h3>
                             <ul class="info-list">
-                                <li>メーカー: <span id="returnInfoMaker"></span></li><li>ID: <span id="returnInfoId"></span></li><li>モデル: <span id="returnInfoModel"></span></li><li>使用者: <span id="returnInfoUser"></span></li>
+                                <li>メーカー: <span id="returnInfoMaker"></span></li><li>ID: <span id="returnInfoId"></span></li><li>モデル: <span id="returnInfoModel"></span></li>
+                                <li>現在の使用者 (参考): <span id="returnInfoUser"></span></li>
                             </ul>
                         </div>
-                        <div class="form-group"><label for="returnComment">返却コメント（任意）</label><input type="text" id="returnComment" placeholder="故障や不具合があれば記入してください"></div>
-                        <button onclick="returnSensor()">返却する</button><button class="secondary-button" onclick="resetForm()">戻る</button>
+                        <div class="form-group"><label for="returnComment">返却コメント（記録されません）</label><input type="text" id="returnComment" placeholder="故障や不具合があれば記入してください"></div>
+                        <p class="note">入力されたコメントはシステムには記録されず、ステータスのみが更新されます。</p>
+                        <button onclick="returnSensor()" id="returnSensorButton">この内容で返却する (ステータス更新)</button>
+                        <button class="secondary-button" onclick="showStep('0_6')">選び直す</button>
+                    </div>
+                     <div id="statusInUseByOther" style="display: none;">
+                        <div class="status-box status-inuse"><div><p>ステータス</p><p class="status-text">使用中</p></div><div class="status-icon inuse-icon">✕</div></div>
+                        <p id="inUseByOtherMessage">このセンサーは現在他のユーザーによって使用中です。</p>
+                        <button class="secondary-button" onclick="showStep(1)">別のセンサーを選ぶ</button>
                     </div>
                 </div>
-                <div class="step" id="step3">
-                    <div id="registrationComplete" style="display: none;">
-                        <div class="completion-message"><div class="completion-icon">✓</div><h2>利用登録完了</h2><p>${sensorName}の利用が登録されました。</p></div>
-                        <div class="info-panel"><h3>登録情報</h3><ul class="info-list"><li>メーカー: <span id="summaryMaker"></span></li><li>ID: <span id="summaryId"></span></li><li>モデル: <span id="summaryModel"></span></li><li>利用者: <span id="summaryUser"></span></li><li>用途: <span id="summaryPurpose"></span></li><li>ステータス: <span>使用中</span></li></ul></div>
-                        <button onclick="resetForm()">トップに戻る</button>
+
+                <div class="step" id="step3"> <div id="operationComplete" style="display: none;">
+                        <div class="completion-message"><div class="completion-icon">✓</div><h2 id="completionTitle"></h2><p id="completionText"></p></div>
+                        <div class="info-panel"><h3 id="summaryPanelTitle">処理結果</h3><ul class="info-list" id="summaryList"></ul></div>
+                        <button onclick="refreshDataAndResetForm()">トップに戻る (最新情報読込)</button>
+                        <button class="secondary-button" onclick="window.location.href='index.html'">種類一覧に戻る</button>
                     </div>
-                    <div id="returnComplete" style="display: none;">
-                        <div class="completion-message"><div class="completion-icon">✓</div><h2>返却完了</h2><p>${sensorName}が正常に返却されました。</p></div>
-                        <div class="info-panel"><h3>返却情報</h3><ul class="info-list"><li>メーカー: <span id="returnSummaryMaker"></span></li><li>ID: <span id="returnSummaryId"></span></li><li>モデル: <span id="returnSummaryModel"></span></li><li>返却者: <span id="returnSummaryUser"></span></li><li>コメント: <span id="returnSummaryComment"></span></li><li>ステータス: <span>利用可能</span></li></ul></div>
+                    <div id="operationError" style="display: none;">
+                        <div class="error-message"><div class="error-icon">❗</div><h2 id="errorTitle">処理エラー</h2><p id="errorText"></p></div>
                         <button onclick="resetForm()">トップに戻る</button>
+                         <button class="secondary-button" onclick="window.location.href='index.html'">種類一覧に戻る</button>
                     </div>
                 </div>
             `;
-            new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 128, height: 128 });
+            container.appendChild(contentDiv);
+
+            if (document.getElementById("qrcode")) {
+                 new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 128, height: 128, correctLevel : QRCode.CorrectLevel.H });
+            }
             populateMakers();
+            showStep('0');
         }
+
+        function displayMessage(message, type = 'info') {
+            const messageContainer = document.getElementById('messageContainer');
+            if (!messageContainer) return;
+            messageContainer.innerHTML = `<div class="alert-message alert-${type}">${message}</div>`;
+        }
+
         function populateMakers() {
             const makerSelect = document.getElementById('sensorMaker');
+            if (!makerSelect) return;
             makerSelect.innerHTML = '<option value="">選択してください</option>';
-            currentSensorInfo.manufacturers.forEach(maker => {
-                const option = document.createElement('option');
-                option.value = maker.id;
-                option.textContent = maker.name;
-                makerSelect.appendChild(option);
-            });
+            if (currentSensorInfoForUI && currentSensorInfoForUI.manufacturers) {
+                currentSensorInfoForUI.manufacturers.forEach(maker => {
+                    const option = document.createElement('option');
+                    option.value = maker.id;
+                    option.textContent = maker.name;
+                    makerSelect.appendChild(option);
+                });
+            }
         }
+
         function showStep(stepNumber) {
             document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
             const targetStep = document.getElementById('step' + stepNumber);
             if(targetStep) targetStep.classList.add('active');
-            document.getElementById('qrcode-container').style.display = (stepNumber === '0' || stepNumber === 0) ? 'block' : 'none';
+            
+            const qrcodeContainer = document.getElementById('qrcode-container');
+            if (qrcodeContainer) {
+                qrcodeContainer.style.display = (String(stepNumber) === '0') ? 'block' : 'none';
+            }
+            displayMessage('');
         }
+
         function searchUserSensors() {
-            const userName = document.getElementById('returnSearchName').value;
-            if (!userName) { alert('お名前を入力してください'); return; }
-            document.getElementById('returnerNameDisplay').textContent = userName;
-            const userSensors = currentSensorInfo.sensors.filter(s => s.status === 'in-use' && s.user === userName);
+            const userNameInput = document.getElementById('returnSearchName').value.trim();
+            // GASはユーザー情報を保持しないため、この名前はローカルの 'in-use' センサーを検索するヒントにしかならない。
+            // 実際には、全ての 'in-use' センサーを表示し、ユーザーに選んでもらう方が確実かもしれない。
+            // ここでは、入力された名前を参考にフィルタリングするが、該当なしの場合のメッセージを工夫する。
+
+            document.getElementById('returnerNameDisplay').textContent = userNameInput || "指定なし";
+
+            const allSensorsOfThisType = sensorDataForUI[currentSensorTypeKey]?.sensors || [];
+            // ステータスが 'in-use' のものを検索
+            let userSensors = allSensorsOfThisType.filter(s => s.status === 'in-use');
+
+            // もしユーザー名が入力されていれば、それで絞り込みを試みる（ローカルデータにuser情報があれば）
+            // ただし、GASからuser情報は来ないので、この絞り込みは貸出直後などローカルに情報が残っている場合のみ有効
+            if (userNameInput) {
+                 userSensors = userSensors.filter(s => s.user && s.user.toLowerCase().includes(userNameInput.toLowerCase()));
+            }
+
+
             const container = document.getElementById('userSensorsContainer');
             const selectContainer = document.getElementById('userSensorSelectContainer');
             const select = document.getElementById('userSensorSelect');
             const confirmButton = document.getElementById('confirmReturnButton');
+
             select.innerHTML = '<option value="">選択してください</option>';
             if (userSensors.length === 0) {
-                container.innerHTML = `<div class="no-sensors-message"><p>該当する${currentSensorInfo.name}が見つかりません</p></div>`;
-                selectContainer.style.display = 'none';
-                confirmButton.style.display = 'none';
+                let message = `現在「使用中」の${currentSensorInfoForUI.name}は見つかりません。`;
+                if(userNameInput) message = `${userNameInput}さんが使用中と思われる${currentSensorInfoForUI.name}は見つかりませんでした。全ての使用中センサーを確認してください。`;
+                // 全ての使用中センサーを表示するオプションも検討
+                const allInUseThisType = allSensorsOfThisType.filter(s => s.status === 'in-use');
+                if(allInUseThisType.length > 0 && userNameInput && userSensors.length === 0){
+                     container.innerHTML = `<div class="no-sensors-message"><p>${message}</p><p>以下は全ての使用中${currentSensorInfoForUI.name}です。</p></div>`;
+                     populateReturnSelectWithOptions(allInUseThisType, select); // 別の関数でプルダウンを生成
+                } else {
+                    container.innerHTML = `<div class="no-sensors-message"><p>${message}</p></div>`;
+                }
+
+                if(select.options.length <=1) { //候補がなければ非表示
+                    selectContainer.style.display = 'none';
+                    confirmButton.style.display = 'none';
+                } else {
+                    selectContainer.style.display = 'block';
+                    confirmButton.style.display = 'block';
+                }
+
             } else {
-                let html = '<div class="info-panel"><ul class="info-list">';
-                userSensors.forEach(sensor => {
-                    const maker = currentSensorInfo.manufacturers.find(m => m.id === sensor.manufacturerId);
-                    const makerName = maker ? maker.name : '不明';
-                    html += `<li><strong>${makerName} ${sensor.model}</strong><br>ID: ${sensor.id}<br>用途: ${sensor.purpose || '記載なし'}</li>`;
-                    const option = document.createElement('option');
-                    option.value = sensor.id;
-                    option.textContent = `${makerName} ${sensor.model} (${sensor.id})`;
-                    select.appendChild(option);
-                });
-                html += '</ul></div>';
-                container.innerHTML = html;
+                container.innerHTML = `<p>${userNameInput ? userNameInput + 'さんが使用中と思われるセンサーリスト（ローカル情報参考）' : '使用中のセンサーリスト'}</p>`;
+                populateReturnSelectWithOptions(userSensors, select);
                 selectContainer.style.display = 'block';
                 confirmButton.style.display = 'block';
             }
             showStep('0_6');
         }
+
+        function populateReturnSelectWithOptions(sensorsToList, selectElement){
+            let htmlList = '<div class="info-panel"><ul class="info-list">';
+            sensorsToList.forEach(sensor => {
+                const maker = currentSensorInfoForUI.manufacturers.find(m => m.id === sensor.manufacturerId);
+                const makerName = maker ? maker.name : '不明';
+                // GASにユーザー情報はないので、表示は参考程度
+                htmlList += `<li><strong>${makerName} ${sensor.model}</strong> (ID: ${sensor.id})<br><small>使用者(ローカル参考): ${sensor.user || '不明'}</small></li>`;
+                const option = document.createElement('option');
+                option.value = sensor.id;
+                option.textContent = `${makerName} ${sensor.model} (ID: ${sensor.id})`;
+                selectElement.appendChild(option);
+            });
+            htmlList += '</ul></div>';
+            // userSensorsContainer にリスト表示する場合
+            const listDisplayContainer = document.getElementById('userSensorsContainer');
+            if(listDisplayContainer) listDisplayContainer.innerHTML += htmlList;
+        }
+
+
         function confirmReturn() {
             const sensorId = document.getElementById('userSensorSelect').value;
-            if (!sensorId) { alert(`返却する${currentSensorInfo.name}を選択してください`); return; }
-            selectedReturnSensor = currentSensorInfo.sensors.find(s => s.id === sensorId);
-            const userName = document.getElementById('returnSearchName').value;
-            const maker = currentSensorInfo.manufacturers.find(m => m.id === selectedReturnSensor.manufacturerId);
+            if (!sensorId) {
+                displayMessage(`返却する${currentSensorInfoForUI.name}を選択してください。`, 'error');
+                return;
+            }
+            const allSensorsOfThisType = sensorDataForUI[currentSensorTypeKey]?.sensors || [];
+            selectedReturnSensor = allSensorsOfThisType.find(s => s.id === sensorId);
+
+            if (!selectedReturnSensor) {
+                displayMessage('選択されたセンサー情報が見つかりません。', 'error');
+                return;
+            }
+
+            const maker = currentSensorInfoForUI.manufacturers.find(m => m.id === selectedReturnSensor.manufacturerId);
             const makerName = maker ? maker.name : '不明';
+
             document.getElementById('returnInfoMaker').textContent = makerName;
             document.getElementById('returnInfoId').textContent = selectedReturnSensor.id;
             document.getElementById('returnInfoModel').textContent = selectedReturnSensor.model;
-            document.getElementById('returnInfoUser').textContent = userName;
+            // GASにユーザー情報はないので、表示は参考情報
+            document.getElementById('returnInfoUser').textContent = selectedReturnSensor.user || '記録なし';
+
             showStep(2);
             document.getElementById('statusAvailable').style.display = 'none';
+            document.getElementById('statusInUseByOther').style.display = 'none';
             document.getElementById('statusReturning').style.display = 'block';
         }
+
         function updateSensorIds() {
-            const makerId = parseInt(document.getElementById('sensorMaker').value, 10);
+            const makerIdInput = document.getElementById('sensorMaker').value;
+            if (makerIdInput === "") {
+                 const sensorIdSelect = document.getElementById('sensorId');
+                 sensorIdSelect.innerHTML = '<option value="">メーカーを先に選択してください</option>';
+                 sensorIdSelect.disabled = true;
+                 return;
+            }
+            const makerId = parseInt(makerIdInput, 10);
             const sensorIdSelect = document.getElementById('sensorId');
             sensorIdSelect.innerHTML = '<option value="">選択してください</option>';
-            if (!makerId) { sensorIdSelect.disabled = true; return; }
-            const availableIds = currentSensorInfo.sensors.filter(s => s.status === 'available' && s.manufacturerId === makerId);
-            if (availableIds.length === 0) {
-                sensorIdSelect.innerHTML = `<option value="" disabled>利用可能な${currentSensorInfo.name}はありません</option>`;
+
+            const availableSensors = currentSensorInfoForUI.sensors.filter(s =>
+                s.status === 'available' && s.manufacturerId === makerId
+            );
+
+            if (availableSensors.length === 0) {
+                sensorIdSelect.innerHTML = `<option value="" disabled>現在利用可能な${currentSensorInfoForUI.name}はありません</option>`;
             } else {
-                availableIds.forEach(idInfo => {
+                availableSensors.forEach(sensor => {
                     const option = document.createElement('option');
-                    option.value = idInfo.id;
-                    option.textContent = `${idInfo.id} - ${idInfo.model}`;
+                    option.value = sensor.id;
+                    option.textContent = `${sensor.id} - ${sensor.model}`;
                     sensorIdSelect.appendChild(option);
                 });
             }
             sensorIdSelect.disabled = false;
         }
-        function checkStatus() {
+
+        function checkBorrowStatus() {
             const sensorId = document.getElementById('sensorId').value;
-            if (!sensorId) { alert(`メーカーと${currentSensorInfo.name}IDを選択してください`); return; }
+            const makerId = document.getElementById('sensorMaker').value;
+
+            if (!makerId || !sensorId) {
+                displayMessage(`メーカーと${currentSensorInfoForUI.name}IDを選択してください。`, 'error');
+                return;
+            }
+            const selectedSensor = currentSensorInfoForUI.sensors.find(s => s.id === sensorId);
+
+            if (!selectedSensor) {
+                 displayMessage('選択されたセンサーが見つかりません。', 'error');
+                 return;
+            }
+
             showStep(2);
-            document.getElementById('statusAvailable').style.display = 'block';
-            document.getElementById('statusReturning').style.display = 'none';
+            if (selectedSensor.status === 'available') {
+                document.getElementById('statusAvailable').style.display = 'block';
+                document.getElementById('statusReturning').style.display = 'none';
+                document.getElementById('statusInUseByOther').style.display = 'none';
+            } else {
+                document.getElementById('statusAvailable').style.display = 'none';
+                document.getElementById('statusReturning').style.display = 'none';
+                document.getElementById('statusInUseByOther').style.display = 'block';
+                const inUseMsg = document.getElementById('inUseByOtherMessage');
+                if (inUseMsg) {
+                     // GASにユーザー情報はないので、表示は参考
+                     inUseMsg.textContent = `この${currentSensorInfoForUI.name} (ID: ${selectedSensor.id}) は現在「使用中」です。`;
+                }
+            }
         }
-        function registerUsage() {
-            const userName = document.getElementById('userName').value;
-            const purpose = document.getElementById('purpose').value;
-            if (!userName || !purpose) { alert('お名前と用途を入力してください'); return; }
+
+        async function registerUsage() {
+            const userName = document.getElementById('userName').value.trim(); // UI上では入力させるが記録されない
+            const purpose = document.getElementById('purpose').value.trim();   // UI上では入力させるが記録されない
             const sensorId = document.getElementById('sensorId').value;
-            const sensor = currentSensorInfo.sensors.find(s => s.id === sensorId);
             const makerId = parseInt(document.getElementById('sensorMaker').value, 10);
-            const maker = currentSensorInfo.manufacturers.find(m => m.id === makerId);
-            document.getElementById('summaryMaker').textContent = maker ? maker.name : '不明';
-            document.getElementById('summaryId').textContent = sensor.id;
-            document.getElementById('summaryModel').textContent = sensor.model;
-            document.getElementById('summaryUser').textContent = userName;
-            document.getElementById('summaryPurpose').textContent = purpose;
-            showStep(3);
-            document.getElementById('registrationComplete').style.display = 'block';
-            document.getElementById('returnComplete').style.display = 'none';
-            alert('利用登録が完了しました（デモ）。ページをリロードすると元の状態に戻ります。');
+
+            if (!sensorId) {
+                displayMessage('センサーIDが選択されていません。', 'error');
+                return;
+            }
+
+            const targetSensorInUI = currentSensorInfoForUI.sensors.find(s => s.id === sensorId);
+            if (!targetSensorInUI) {
+                displayMessage('対象センサーが見つかりません。', 'error');
+                return;
+            }
+
+            const payloadForGAS = {
+                id: sensorId,
+                type: targetSensorInUI.originalType, // 大文字のセンサータイプ (例: CAMERA)
+                status: 'in use' // GAS側が期待するステータス名
+            };
+
+            const registerButton = document.getElementById('registerUsageButton');
+            registerButton.disabled = true;
+            registerButton.textContent = '登録中...';
+            displayMessage('利用登録処理中です...', 'info');
+
+            try {
+                const result = await sensorManagerInstance.updateSensorStatusOnGAS(payloadForGAS);
+                if (result.success) {
+                    const maker = currentSensorInfoForUI.manufacturers.find(m => m.id === makerId);
+                    document.getElementById('completionTitle').textContent = 'ステータス更新完了';
+                    document.getElementById('completionText').textContent = `${currentSensorInfoForUI.name}のステータスが「使用中」に更新されました。`;
+                    document.getElementById('summaryPanelTitle').textContent = '更新結果';
+                    const summaryList = document.getElementById('summaryList');
+                    summaryList.innerHTML = `
+                        <li>メーカー: <span>${maker ? maker.name : '不明'}</span></li>
+                        <li>ID: <span>${sensorId}</span></li>
+                        <li>モデル: <span>${targetSensorInUI.model}</span></li>
+                        <li>新しいステータス: <span>使用中</span></li>
+                        <li class="note">入力されたお名前と用途は記録されません。</li>
+                    `;
+                    showStep(3);
+                    document.getElementById('operationComplete').style.display = 'block';
+                    document.getElementById('operationError').style.display = 'none';
+
+                    // ローカルUI用データの更新 (ページリロードまではこの情報で表示)
+                    targetSensorInUI.status = 'in-use';
+                    targetSensorInUI.user = userName; // UI表示用に保持
+                    targetSensorInUI.purpose = purpose; // UI表示用に保持
+
+                } else {
+                    throw new Error(result.message || 'GASでの更新に失敗しました。');
+                }
+            } catch (error) {
+                console.error('利用登録エラー:', error);
+                document.getElementById('errorTitle').textContent = 'ステータス更新エラー';
+                document.getElementById('errorText').textContent = `処理中にエラーが発生しました: ${error.message}`;
+                showStep(3);
+                document.getElementById('operationComplete').style.display = 'none';
+                document.getElementById('operationError').style.display = 'block';
+            } finally {
+                registerButton.disabled = false;
+                registerButton.textContent = '利用登録する (ステータス更新)';
+            }
         }
-        function returnSensor() {
-            const returnComment = document.getElementById('returnComment').value || 'なし';
-            const userName = document.getElementById('returnSearchName').value;
-            const makerName = document.getElementById('returnInfoMaker').textContent;
-            document.getElementById('returnSummaryMaker').textContent = makerName;
-            document.getElementById('returnSummaryId').textContent = selectedReturnSensor.id;
-            document.getElementById('returnSummaryModel').textContent = selectedReturnSensor.model;
-            document.getElementById('returnSummaryUser').textContent = userName;
-            document.getElementById('returnSummaryComment').textContent = returnComment;
-            showStep(3);
-            document.getElementById('registrationComplete').style.display = 'none';
-            document.getElementById('returnComplete').style.display = 'block';
-            alert('返却が完了しました（デモ）。ページをリロードすると元の状態に戻ります。');
+
+        async function returnSensor() {
+            if (!selectedReturnSensor) {
+                displayMessage('返却するセンサーが選択されていません。', 'error');
+                return;
+            }
+            const returnComment = document.getElementById('returnComment').value.trim(); // UI上では入力させるが記録されない
+
+            const payloadForGAS = {
+                id: selectedReturnSensor.id,
+                type: selectedReturnSensor.originalType, // 大文字のセンサータイプ
+                status: 'free' // GAS側が期待するステータス名
+            };
+
+            const returnButton = document.getElementById('returnSensorButton');
+            returnButton.disabled = true;
+            returnButton.textContent = '返却処理中...';
+            displayMessage('返却処理中です...', 'info');
+
+            try {
+                const result = await sensorManagerInstance.updateSensorStatusOnGAS(payloadForGAS);
+                if (result.success) {
+                    const maker = currentSensorInfoForUI.manufacturers.find(m => m.id === selectedReturnSensor.manufacturerId);
+                    document.getElementById('completionTitle').textContent = 'ステータス更新完了';
+                    document.getElementById('completionText').textContent = `${currentSensorInfoForUI.name}のステータスが「利用可能」に更新されました。`;
+                    document.getElementById('summaryPanelTitle').textContent = '更新結果';
+                    const summaryList = document.getElementById('summaryList');
+                    summaryList.innerHTML = `
+                        <li>メーカー: <span>${maker ? maker.name : '不明'}</span></li>
+                        <li>ID: <span>${selectedReturnSensor.id}</span></li>
+                        <li>モデル: <span>${selectedReturnSensor.model}</span></li>
+                        <li>新しいステータス: <span>利用可能</span></li>
+                        <li class="note">入力されたコメントは記録されません。</li>
+                    `;
+                    showStep(3);
+                    document.getElementById('operationComplete').style.display = 'block';
+                    document.getElementById('operationError').style.display = 'none';
+
+                    // ローカルUI用データの更新
+                    selectedReturnSensor.status = 'available';
+                    selectedReturnSensor.user = null;
+                    selectedReturnSensor.purpose = null;
+                    selectedReturnSensor = null;
+                } else {
+                    throw new Error(result.message || 'GASでの更新に失敗しました。');
+                }
+            } catch (error) {
+                console.error('返却エラー:', error);
+                document.getElementById('errorTitle').textContent = 'ステータス更新エラー';
+                document.getElementById('errorText').textContent = `処理中にエラーが発生しました: ${error.message}`;
+                showStep(3);
+                document.getElementById('operationComplete').style.display = 'none';
+                document.getElementById('operationError').style.display = 'block';
+            } finally {
+                returnButton.disabled = false;
+                returnButton.textContent = 'この内容で返却する (ステータス更新)';
+            }
         }
-        function resetForm() { buildPage(); }
+
+        // データを再読み込みしてフォームをリセットする関数
+        async function refreshDataAndResetForm() {
+            const container = document.querySelector('.container');
+            container.innerHTML = '<div class="loader"></div><p style="text-align:center;">最新情報を読み込み中...</p>';
+            try {
+                allSensorRawData = await sensorManagerInstance.fetchSensorStatus();
+                sensorDataForUI = transformDataForUI(allSensorRawData);
+
+                if (!sensorDataForUI[currentSensorTypeKey]) { // タイプキーが存在するか再確認
+                     currentSensorInfoForUI = { name: "情報なし", icon:"❓", manufacturers: [], sensors: []}; //フォールバック
+                } else {
+                    currentSensorInfoForUI = sensorDataForUI[currentSensorTypeKey];
+                }
+                // currentSensorInfoForUI が未定義でないことを保証
+                if(!currentSensorInfoForUI) currentSensorInfoForUI = { name: currentSensorTypeKey, icon:"❓", manufacturers: [], sensors: []};
+
+
+                buildPage(); // ページを再構築
+                showStep('0'); // 初期ステップ表示
+            } catch (error) {
+                 console.error('データ再読み込みエラー:', error);
+                 container.innerHTML = `<h1>エラー</h1><p>データの再読み込みに失敗しました。<br>${error.message}</p><button onclick="window.location.href='index.html'">トップに戻る</button>`;
+            }
+        }
+
+
+        function resetForm() {
+            // buildPageを呼び出してUIを初期状態に戻す
+            buildPage();
+            showStep('0');
+        }
     </script>
 </body>
 </html>

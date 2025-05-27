@@ -12,7 +12,6 @@
             background-color: #f5f5f5;
             color: #333;
         }
-        
         .container {
             max-width: 800px;
             margin: 20px auto;
@@ -21,25 +20,21 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 20px;
         }
-        
         h1, h2 {
             color: #2c3e50;
         }
-        
         h1 {
             text-align: center;
             margin-bottom: 20px;
             border-bottom: 1px solid #eee;
             padding-bottom: 15px;
         }
-        
         .sensor-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 20px;
             margin-top: 20px;
         }
-        
         .sensor-card {
             border: 1px solid #ddd;
             border-radius: 8px;
@@ -47,22 +42,18 @@
             text-align: center;
             transition: transform 0.2s, box-shadow 0.2s;
         }
-        
         .sensor-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
-        
         .sensor-icon {
             font-size: 48px;
             margin-bottom: 10px;
         }
-        
         .sensor-name {
             font-weight: bold;
             margin-bottom: 10px;
         }
-        
         .button {
             display: block;
             width: 100%;
@@ -76,15 +67,26 @@
             margin-top: 10px;
             transition: background-color 0.3s;
         }
-        
         .button:hover {
             background-color: #2980b9;
         }
-        
         .stats {
             margin-top: 5px;
             font-size: 12px;
             color: #666;
+        }
+        .loader { /* ローディング表示用 */
+            border: 5px solid #f3f3f3; /* Light grey */
+            border-top: 5px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -93,99 +95,108 @@
         <h1>センサ管理システム</h1>
         <h2>センサ種類一覧</h2>
         <div class="sensor-grid" id="sensorGrid">
-            <p>データを読み込んでいます...</p>
+            <div class="loader"></div>
+            <p style="text-align:center;">データを読み込んでいます...</p>
         </div>
     </div>
-    
+
     <script src="sensorManager.js"></script>
     <script>
-        let sensorData = {};
+        let uiSensorData = {}; // UI表示用に変換したデータ
 
-        // データ形式の変換関数 (前回作成したものをそのまま使用)
-        function transformData(newData) {
-            const oldData = {};
+        // データ形式の変換関数 (sensor_detail.htmlのtransformDataForUIとほぼ同じ)
+        function transformRawDataToUIData(rawDataArray) {
+            const newUiData = {};
             const typeDetails = {
                 'CAMERA': { name: 'カメラ', icon: '📷' },
                 'LIDAR': { name: 'LiDAR', icon: '📡' },
                 'IMU': { name: 'IMUセンサ', icon: '🧭' },
                 'MOTOR': { name: 'モーター', icon: '⚙️' },
+                // 必要に応じて他のセンサータイプを追加
             };
 
-            newData.forEach((sensor, index) => {
-                if (!sensor.type || !sensor.model || !sensor.status) {
+            if (!Array.isArray(rawDataArray)) {
+                console.error("transformRawDataToUIData: rawDataArray is not an array", rawDataArray);
+                return newUiData;
+            }
+
+            rawDataArray.forEach((sensor) => {
+                if (!sensor.type || !sensor.model || !sensor.status || !sensor.id) {
+                    console.warn("Skipping sensor due to missing properties in index.html:", sensor);
                     return;
                 }
-                const typeKey = sensor.type.toLowerCase();
-                const details = typeDetails[sensor.type] || { name: sensor.type, icon: '❓' };
-                if (!oldData[typeKey]) {
-                    oldData[typeKey] = {
+                const typeKey = sensor.type.toLowerCase(); // "camera", "lidar"
+                const details = typeDetails[sensor.type.toUpperCase()] || { name: sensor.type, icon: '❓' };
+
+                if (!newUiData[typeKey]) {
+                    newUiData[typeKey] = {
                         name: details.name,
                         icon: details.icon,
-                        manufacturers: [],
+                        manufacturers: [], // index.htmlではメーカー情報は直接使わないが構造は合わせる
                         sensors: []
                     };
                 }
-                let manufacturer = oldData[typeKey].manufacturers.find(m => m.name === sensor.company);
-                if (!manufacturer && sensor.company) {
-                    manufacturer = {
-                        id: oldData[typeKey].manufacturers.length + 1,
-                        name: sensor.company
-                    };
-                    oldData[typeKey].manufacturers.push(manufacturer);
+                // GASからのステータス名をUI用のステータス名に変換
+                let uiStatus = 'unknown';
+                if(sensor.status){
+                    const statusLower = sensor.status.toLowerCase();
+                    if (statusLower === 'free') uiStatus = 'available';
+                    else if (statusLower === 'in use') uiStatus = 'in-use';
+                    else uiStatus = statusLower;
                 }
-                const uniqueId = `${typeKey.charAt(0).toUpperCase()}${sensor.id || index}`;
-                const newSensor = {
-                    id: uniqueId,
+
+                const uiSensor = {
+                    id: sensor.id,
                     model: sensor.model,
-                    status: sensor.status === 'free' ? 'available' : 'in-use',
-                    manufacturerId: manufacturer ? manufacturer.id : null,
-                    user: null,
-                    purpose: null
+                    status: uiStatus,
+                    // manufacturerId: manufacturer ? manufacturer.id : null, // index.htmlでは不要
+                    // user: null, // index.htmlでは不要
+                    // purpose: null, // index.htmlでは不要
+                    originalType: sensor.type
                 };
-                oldData[typeKey].sensors.push(newSensor);
+                newUiData[typeKey].sensors.push(uiSensor);
             });
-            return oldData;
+            return newUiData;
         }
 
-        // 画面ロード時の処理をGAS対応に変更
+        // 画面ロード時の処理 (GAS変更なし対応)
         window.onload = async function() {
             const sensorGrid = document.getElementById('sensorGrid');
-            const GAS_URL = 'https://script.google.com/macros/s/AKfycbyo7WCmt1DTmQ9rrIHo4zDmBnRkk0oBG1s0IcNDVr-dYywKpSJavBalIpIZiQvuQQhizw/exec';
-            const sensorManager = new SensorManager(GAS_URL);
+            const GAS_URL = 'https://script.google.com/macros/s/AKfycbyo7WCmt1DTmQ9rrIHo4zDmBnRkk0oBG1s0IcNDVr-dYywKpSJavBalIpIZiQvuQQhizw/exec'; // GASのURL
+            const manager = new SensorManager(GAS_URL);
 
             try {
-                // sensorManager を使ってGASからデータを取得
-                const newRawData = await sensorManager.fetchSensorStatus();
-                
-                // 取得したデータを既存の形式に変換
-                sensorData = transformData(newRawData);
-                
-                // 画面をレンダリング
+                const rawSensorDataFromGAS = await manager.fetchSensorStatus(); // freeとinuseを結合したリスト
+                uiSensorData = transformRawDataToUIData(rawSensorDataFromGAS);
                 renderSensorTypes();
-
             } catch (error) {
-                console.error('Fetch error:', error);
+                console.error('Fetch error in index.html:', error);
                 sensorGrid.innerHTML = '<p>データの読み込みに失敗しました。管理者にお問い合わせください。</p>';
             }
         };
 
-        // センサ種類のレンダリング (この関数は変更不要)
+        // センサ種類のレンダリング
         function renderSensorTypes() {
             const sensorGrid = document.getElementById('sensorGrid');
-            sensorGrid.innerHTML = '';
-            
-            for (const typeKey in sensorData) {
-                const sensor = sensorData[typeKey];
-                const available = sensor.sensors.filter(s => s.status === 'available').length;
-                const inUse = sensor.sensors.filter(s => s.status === 'in-use').length;
+            sensorGrid.innerHTML = ''; // ローダーをクリア
+
+            if (Object.keys(uiSensorData).length === 0) {
+                sensorGrid.innerHTML = '<p>表示できるセンサーがありません。</p>';
+                return;
+            }
+
+            for (const typeKey in uiSensorData) {
+                const sensorTypeInfo = uiSensorData[typeKey];
+                const availableCount = sensorTypeInfo.sensors.filter(s => s.status === 'available').length;
+                const inUseCount = sensorTypeInfo.sensors.filter(s => s.status === 'in-use').length;
 
                 const card = document.createElement('div');
                 card.className = 'sensor-card';
                 card.innerHTML = `
-                    <div class="sensor-icon">${sensor.icon}</div>
-                    <div class="sensor-name">${sensor.name}</div>
+                    <div class="sensor-icon">${sensorTypeInfo.icon}</div>
+                    <div class="sensor-name">${sensorTypeInfo.name}</div>
                     <div class="stats">
-                        利用可能: ${available} / 使用中: ${inUse}
+                        利用可能: ${availableCount} / 使用中: ${inUseCount}
                     </div>
                     <button class="button" onclick="location.href='sensor_detail.html?type=${typeKey}'">詳細・QRコード</button>
                 `;
