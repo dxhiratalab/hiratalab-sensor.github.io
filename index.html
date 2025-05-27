@@ -176,160 +176,68 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             box-sizing: border-box;
-        }
-    </style>
+        }    </style>
 </head>
 <body>
     <div class="container">
         <h1>センサ管理システム</h1>
-        
         <div class="action-buttons">
-            <button class="action-button" onclick="showAddSensorType()">センサ種類を追加</button>
+            <button class="action-button" onclick="alert('管理画面での動的な追加は未実装です。data.jsonを直接編集してください。')">センサ種類を追加</button>
             <button class="action-button secondary" onclick="exportData()">データエクスポート</button>
         </div>
-        
         <h2>センサ種類一覧</h2>
-        
         <div class="sensor-grid" id="sensorGrid">
-            <!-- センサカードがここに動的に追加されます -->
-        </div>
-    </div>
-    
-    <!-- 新規センサ種類追加モーダル -->
-    <div class="modal" id="addSensorModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>新規センサ種類の追加</h2>
-                <span class="modal-close" onclick="closeModal('addSensorModal')">&times;</span>
             </div>
-            
-            <div class="form-group">
-                <label for="newSensorName">センサ種類名</label>
-                <input type="text" id="newSensorName" placeholder="例: カメラ">
-            </div>
-            
-            <div class="form-group">
-                <label for="newSensorIcon">アイコン（絵文字）</label>
-                <input type="text" id="newSensorIcon" placeholder="例: 📷">
-            </div>
-            
-            <button class="button" onclick="addSensorType()">追加</button>
-        </div>
-    </div>
-    
-    <!-- QRコード表示モーダル -->
-    <div class="modal" id="qrCodeModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="qrCodeTitle">QRコード</h2>
-                <span class="modal-close" onclick="closeModal('qrCodeModal')">&times;</span>
-            </div>
-            
-            <div style="text-align: center;">
-                <div id="qrCode" class="qr-placeholder" style="width: 200px; height: 200px; margin: 20px auto;">
-                    QRコード
-                </div>
-                <p>このQRコードをセンサボックスに貼り付けてください。</p>
-                <p>ユーザーがこのQRコードをスキャンすると、このセンサ種類の利用登録画面が表示されます。</p>
-                <button class="button" onclick="printQRCode()">印刷</button>
-            </div>
-        </div>
     </div>
     
     <script>
-        // センサ種類のサンプルデータ
-        const sensorTypes = [
-            { id: 1, name: 'カメラ', icon: '📷', available: 5, inUse: 2 },
-            { id: 2, name: 'LiDAR', icon: '📡', available: 3, inUse: 1 },
-            { id: 3, name: '温度センサ', icon: '🌡️', available: 8, inUse: 0 },
-            { id: 4, name: '圧力センサ', icon: '⚖️', available: 4, inUse: 2 },
-            { id: 5, name: '距離センサ', icon: '📏', available: 6, inUse: 1 }
-        ];
-        
-        // 画面ロード時にセンサ種類を表示
+        let sensorData = {}; // 読み込んだデータを保持する変数
+
+        // 画面ロード時にデータを読み込んで表示
         window.onload = function() {
-            renderSensorTypes();
+            fetch('data.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    sensorData = data; // データをグローバル変数に保存
+                    renderSensorTypes();
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    document.getElementById('sensorGrid').innerHTML = '<p>データの読み込みに失敗しました。</p>';
+                });
         };
-        
+
         // センサ種類のレンダリング
         function renderSensorTypes() {
             const sensorGrid = document.getElementById('sensorGrid');
             sensorGrid.innerHTML = '';
             
-            sensorTypes.forEach(sensor => {
+            for (const typeKey in sensorData) {
+                const sensor = sensorData[typeKey];
+                const available = sensor.sensors.filter(s => s.status === 'available').length;
+                const inUse = sensor.sensors.filter(s => s.status === 'in-use').length;
+
                 const card = document.createElement('div');
                 card.className = 'sensor-card';
                 card.innerHTML = `
                     <div class="sensor-icon">${sensor.icon}</div>
                     <div class="sensor-name">${sensor.name}</div>
-                    <div class="qr-placeholder">QRコード</div>
                     <div class="stats">
-                        利用可能: ${sensor.available} / 使用中: ${sensor.inUse}
+                        利用可能: ${available} / 使用中: ${inUse}
                     </div>
-                    <button class="button" onclick="showQRCode(${sensor.id}, '${sensor.name}')">QRコードを表示</button>
-                    <button class="button" onclick="location.href='sensor_detail_${sensor.id}.html'">詳細</button>
+                    <button class="button" onclick="location.href='sensor_detail.html?type=${typeKey}'">詳細・QRコード</button>
                 `;
                 sensorGrid.appendChild(card);
-            });
-        }
-        
-        // センサ種類追加モーダルを表示
-        function showAddSensorType() {
-            document.getElementById('addSensorModal').style.display = 'flex';
-        }
-        
-        // QRコード表示モーダルを表示
-        function showQRCode(id, name) {
-            document.getElementById('qrCodeTitle').textContent = `${name} のQRコード`;
-            document.getElementById('qrCodeModal').style.display = 'flex';
-            
-            // 実際の実装では、ここでQRコードを生成して表示
-            // 例: QRコードのURLは `register.html?type=${id}` などになる
-        }
-        
-        // モーダルを閉じる
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-        
-        // 新規センサ種類の追加
-        function addSensorType() {
-            const name = document.getElementById('newSensorName').value;
-            const icon = document.getElementById('newSensorIcon').value;
-            
-            if (!name || !icon) {
-                alert('センサ種類名とアイコンを入力してください');
-                return;
             }
-            
-            // 新しいセンサ種類を追加
-            const newId = sensorTypes.length > 0 ? Math.max(...sensorTypes.map(s => s.id)) + 1 : 1;
-            sensorTypes.push({
-                id: newId,
-                name: name,
-                icon: icon,
-                available: 0,
-                inUse: 0
-            });
-            
-            // 画面を更新
-            renderSensorTypes();
-            
-            // モーダルを閉じてフォームをリセット
-            document.getElementById('newSensorName').value = '';
-            document.getElementById('newSensorIcon').value = '';
-            closeModal('addSensorModal');
-        }
-        
-        // QRコードの印刷
-        function printQRCode() {
-            // 実際の実装では、ここでQRコードの印刷処理
-            alert('QRコードの印刷処理が呼び出されました');
         }
         
         // データのエクスポート
         function exportData() {
-            // 実際の実装では、ここでデータのエクスポート処理
             alert('データのエクスポート処理が呼び出されました');
         }
     </script>
