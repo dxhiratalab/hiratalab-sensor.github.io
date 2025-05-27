@@ -9,12 +9,12 @@
       { "id": 4, "name": "Panasonic" }
     ],
     "sensors": [
-      { "id": "C001", "model": "EOS R5", "status": "available", "user": null, "purpose": null },
-      { "id": "C002", "model": "EOS R6", "status": "in-use", "user": "田中実", "purpose": "卒業研究" },
-      { "id": "C003", "model": "EOS 5D Mark IV", "status": "available", "user": null, "purpose": null },
-      { "id": "N003", "model": "D850", "status": "in-use", "user": "鈴木一郎", "purpose": "論文撮影" },
-      { "id": "S001", "model": "α7 III", "status": "in-use", "user": "佐藤花子", "purpose": "作品制作" },
-      { "id": "P002", "model": "LUMIX GH5", "status": "in-use", "user": "高橋健太", "purpose": "実験記録" }
+      { "id": "C001", "model": "EOS R5", "status": "available", "manufacturerId": 1, "user": null, "purpose": null },
+      { "id": "C002", "model": "EOS R6", "status": "in-use", "manufacturerId": 1, "user": "田中実", "purpose": "卒業研究" },
+      { "id": "C003", "model": "EOS 5D Mark IV", "status": "available", "manufacturerId": 1, "user": null, "purpose": null },
+      { "id": "N003", "model": "D850", "status": "in-use", "manufacturerId": 2, "user": "鈴木一郎", "purpose": "論文撮影" },
+      { "id": "S001", "model": "α7 III", "status": "in-use", "manufacturerId": 3, "user": "佐藤花子", "purpose": "作品制作" },
+      { "id": "P002", "model": "LUMIX GH5", "status": "in-use", "manufacturerId": 4, "user": "高橋健太", "purpose": "実験記録" }
     ]
   },
   "lidar": {
@@ -27,11 +27,11 @@
       { "id": 4, "name": "Livox" }
     ],
     "sensors": [
-      { "id": "VLP-16-001", "model": "VLP-16 Puck", "status": "available", "user": null, "purpose": null },
-      { "id": "VLP-32-001", "model": "VLP-32 Ultra Puck", "status": "in-use", "user": "山田太郎", "purpose": "自動運転実験" },
-      { "id": "OS2-128-001", "model": "OS2-128", "status": "in-use", "user": "佐藤花子", "purpose": "環境マッピング" },
-      { "id": "LMS-111-001", "model": "LMS-111", "status": "in-use", "user": "山田太郎", "purpose": "障害物検知システム開発" },
-      { "id": "HOR-32-001", "model": "Horizon", "status": "in-use", "user": "鈴木一郎", "purpose": "ロボット制御" }
+      { "id": "VLP-16-001", "model": "VLP-16 Puck", "status": "available", "manufacturerId": 1, "user": null, "purpose": null },
+      { "id": "VLP-32-001", "model": "VLP-32 Ultra Puck", "status": "in-use", "manufacturerId": 1, "user": "山田太郎", "purpose": "自動運転実験" },
+      { "id": "OS2-128-001", "model": "OS2-128", "status": "in-use", "manufacturerId": 2, "user": "佐藤花子", "purpose": "環境マッピング" },
+      { "id": "LMS-111-001", "model": "LMS-111", "status": "in-use", "manufacturerId": 3, "user": "山田太郎", "purpose": "障害物検知システム開発" },
+      { "id": "HOR-32-001", "model": "Horizon", "status": "in-use", "manufacturerId": 4, "user": "鈴木一郎", "purpose": "ロボット制御" }
     ]
   },
   "temperature": {
@@ -43,9 +43,9 @@
       { "id": 3, "name": "KEYENCE" }
     ],
     "sensors": [
-      { "id": "TP-PA-001", "model": "高精度サーミスタ", "status": "available", "user": null, "purpose": null },
-      { "id": "TP-PA-002", "model": "防水型熱電対", "status": "in-use", "user": "加藤淳", "purpose": "恒温槽監視" },
-      { "id": "TP-KY-001", "model": "FT-H30", "status": "in-use", "user": "田中実", "purpose": "表面温度計測" }
+      { "id": "TP-PA-001", "model": "高精度サーミスタ", "status": "available", "manufacturerId": 1, "user": null, "purpose": null },
+      { "id": "TP-PA-002", "model": "防水型熱電対", "status": "in-use", "manufacturerId": 1, "user": "加藤淳", "purpose": "恒温槽監視" },
+      { "id": "TP-KY-001", "model": "FT-H30", "status": "in-use", "manufacturerId": 3, "user": "田中実", "purpose": "表面温度計測" }
     ]
   },
   "pressure": {
@@ -57,8 +57,8 @@
         { "id": 3, "name": "KEYENCE" }
     ],
     "sensors": [
-        { "id": "PS-OM-002", "model": "E8F2-10", "status": "in-use", "user": "伊藤博", "purpose": "水圧測定" },
-        { "id": "PS-YK-003", "model": "EJX110A", "status": "in-use", "user": "渡辺直樹", "purpose": "気圧実験" }
+        { "id": "PS-OM-002", "model": "E8F2-10", "status": "in-use", "manufacturerId": 1, "user": "伊藤博", "purpose": "水圧測定" },
+        { "id": "PS-YK-003", "model": "EJX110A", "status": "in-use", "manufacturerId": 2, "user": "渡辺直樹", "purpose": "気圧実験" }
     ]
   },
   "distance": {
@@ -70,7 +70,7 @@
           { "id": 3, "name": "OMRON" }
       ],
       "sensors": [
-          { "id": "DS-KY-002", "model": "IA-1000", "status": "in-use", "user": "山本一郎", "purpose": "ロボットアーム制御" }
+          { "id": "DS-KY-002", "model": "IA-1000", "status": "in-use", "manufacturerId": 1, "user": "山本一郎", "purpose": "ロボットアーム制御" }
       ]
   }
 }

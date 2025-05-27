@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>センサ管理システム</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -118,13 +119,22 @@
             text-align: center; padding: 20px; background-color: #f8f9fa;
             border-radius: 8px; color: #7f8c8d; margin: 20px 0;
         }
+        /* QRコード用のスタイル */
+        #qrcode {
+            width: 128px;
+            height: 128px;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            padding: 5px;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         </div>
 
-<script>
+    <script>
         // --- グローバル変数 ---
         let sensorData = {};
         let currentSensorTypeKey;
@@ -141,7 +151,6 @@
                 return;
             }
             
-            // JSONを読み込んでからページを構築
             fetch('data.json')
                 .then(response => {
                     if (!response.ok) { throw new Error('Network response was not ok'); }
@@ -154,7 +163,7 @@
                     }
                     currentSensorInfo = sensorData[currentSensorTypeKey];
                     document.title = `センサ管理システム - ${currentSensorInfo.name}利用登録`;
-                    buildPage(); // ページ構築処理を呼び出す
+                    buildPage();
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -171,6 +180,11 @@
                 <h1>${sensorName}管理</h1>
                 <div class="sensor-icon">${currentSensorInfo.icon}</div>
                 
+                <div id="qrcode-container">
+                    <p style="text-align:center; color:#666; margin-bottom:5px;">このページのQRコード</p>
+                    <div id="qrcode"></div>
+                </div>
+
                 <div class="step active" id="step0">
                     <h2>操作を選択してください</h2>
                     <div class="choice-buttons">
@@ -279,6 +293,13 @@
                     </div>
                 </div>
             `;
+            
+            // QRコードを生成
+            new QRCode(document.getElementById("qrcode"), {
+                text: window.location.href,
+                width: 128,
+                height: 128,
+            });
 
             populateMakers();
         }
@@ -288,7 +309,7 @@
             makerSelect.innerHTML = '<option value="">選択してください</option>';
             currentSensorInfo.manufacturers.forEach(maker => {
                 const option = document.createElement('option');
-                option.value = maker.name;
+                option.value = maker.id; // valueをidに変更
                 option.textContent = maker.name;
                 makerSelect.appendChild(option);
             });
@@ -299,44 +320,9 @@
             document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
             const targetStep = document.getElementById('step' + stepNumber);
             if(targetStep) targetStep.classList.add('active');
-        }
-        
-        // --- ★ 修正箇所 ---
-        // センサ情報からメーカー名を特定するヘルパー関数
-        function getManufacturerNameForSensor(sensor) {
-            const sensorId = sensor.id;
-            let makerName = null;
-
-            switch (currentSensorTypeKey) {
-                case 'camera':
-                    if (sensorId.startsWith('C')) makerName = 'Canon';
-                    else if (sensorId.startsWith('N')) makerName = 'Nikon';
-                    else if (sensorId.startsWith('S')) makerName = 'Sony';
-                    else if (sensorId.startsWith('P')) makerName = 'Panasonic';
-                    break;
-                case 'lidar':
-                    if (sensorId.startsWith('VLP')) makerName = 'Velodyne';
-                    else if (sensorId.startsWith('OS')) makerName = 'Ouster';
-                    else if (sensorId.startsWith('LMS')) makerName = 'SICK';
-                    else if (sensorId.startsWith('HOR')) makerName = 'Livox';
-                    break;
-                case 'temperature':
-                    if (sensorId.startsWith('TP-PA')) makerName = 'Panasonic';
-                    else if (sensorId.startsWith('TP-OM')) makerName = 'OMRON';
-                    else if (sensorId.startsWith('TP-KY')) makerName = 'KEYENCE';
-                    break;
-                case 'pressure':
-                    if (sensorId.startsWith('PS-OM')) makerName = 'OMRON';
-                    else if (sensorId.startsWith('PS-YK')) makerName = 'Yokogawa';
-                    else if (sensorId.startsWith('PS-KY')) makerName = 'KEYENCE';
-                    break;
-                case 'distance':
-                    if (sensorId.startsWith('DS-KY')) makerName = 'KEYENCE';
-                    else if (sensorId.startsWith('DS-SI')) makerName = 'SICK';
-                    else if (sensorId.startsWith('DS-OM')) makerName = 'OMRON';
-                    break;
-            }
-            return makerName;
+            
+            // 操作選択画面以外ではQRコードを非表示にする
+            document.getElementById('qrcode-container').style.display = (stepNumber === '0' || stepNumber === 0) ? 'block' : 'none';
         }
 
         // --- 返却フロー ---
@@ -361,7 +347,8 @@
             } else {
                 let html = '<div class="info-panel"><ul class="info-list">';
                 userSensors.forEach(sensor => {
-                    const makerName = getManufacturerNameForSensor(sensor) || '不明';
+                    const maker = currentSensorInfo.manufacturers.find(m => m.id === sensor.manufacturerId);
+                    const makerName = maker ? maker.name : '不明';
                     html += `<li><strong>${makerName} ${sensor.model}</strong><br>ID: ${sensor.id}<br>用途: ${sensor.purpose || '記載なし'}</li>`;
                     
                     const option = document.createElement('option');
@@ -383,7 +370,8 @@
 
             selectedReturnSensor = currentSensorInfo.sensors.find(s => s.id === sensorId);
             const userName = document.getElementById('returnSearchName').value;
-            const makerName = getManufacturerNameForSensor(selectedReturnSensor) || '不明';
+            const maker = currentSensorInfo.manufacturers.find(m => m.id === selectedReturnSensor.manufacturerId);
+            const makerName = maker ? maker.name : '不明';
 
             document.getElementById('returnInfoMaker').textContent = makerName;
             document.getElementById('returnInfoId').textContent = selectedReturnSensor.id;
@@ -395,21 +383,19 @@
             document.getElementById('statusReturning').style.display = 'block';
         }
 
-        // --- ★ 修正箇所 ---
-        // --- 貸出フロー ---
+        // --- 貸出フロー (manufacturerIdを使うように修正) ---
         function updateSensorIds() {
-            const makerName = document.getElementById('sensorMaker').value;
+            const makerId = parseInt(document.getElementById('sensorMaker').value, 10);
             const sensorIdSelect = document.getElementById('sensorId');
             
             sensorIdSelect.innerHTML = '<option value="">選択してください</option>';
-            if (!makerName) { 
+            if (!makerId) { 
                 sensorIdSelect.disabled = true;
                 return;
             }
 
             const availableIds = currentSensorInfo.sensors.filter(s => {
-                // 修正されたロジック：getManufacturerNameForSensor関数でメーカーを特定する
-                return s.status === 'available' && getManufacturerNameForSensor(s) === makerName;
+                return s.status === 'available' && s.manufacturerId === makerId;
             });
             
             if (availableIds.length === 0) {
@@ -433,7 +419,7 @@
             document.getElementById('statusReturning').style.display = 'none';
         }
 
-        // --- 登録・返却処理 (データ永続化は未実装) ---
+        // --- 登録・返却処理 ---
         function registerUsage() {
             const userName = document.getElementById('userName').value;
             const purpose = document.getElementById('purpose').value;
@@ -441,10 +427,11 @@
 
             const sensorId = document.getElementById('sensorId').value;
             const sensor = currentSensorInfo.sensors.find(s => s.id === sensorId);
-            const makerName = document.getElementById('sensorMaker').value;
             
-            // サマリー表示
-            document.getElementById('summaryMaker').textContent = makerName;
+            const makerId = parseInt(document.getElementById('sensorMaker').value, 10);
+            const maker = currentSensorInfo.manufacturers.find(m => m.id === makerId);
+            
+            document.getElementById('summaryMaker').textContent = maker ? maker.name : '不明';
             document.getElementById('summaryId').textContent = sensor.id;
             document.getElementById('summaryModel').textContent = sensor.model;
             document.getElementById('summaryUser').textContent = userName;
@@ -454,7 +441,6 @@
             document.getElementById('registrationComplete').style.display = 'block';
             document.getElementById('returnComplete').style.display = 'none';
             
-            // 本来はここでサーバーに更新リクエストを送信する
             alert('利用登録が完了しました（デモ）。ページをリロードすると元の状態に戻ります。');
         }
 
@@ -462,7 +448,6 @@
             const returnComment = document.getElementById('returnComment').value || 'なし';
             const userName = document.getElementById('returnSearchName').value;
 
-            // サマリー表示
             const makerName = document.getElementById('returnInfoMaker').textContent;
             document.getElementById('returnSummaryMaker').textContent = makerName;
             document.getElementById('returnSummaryId').textContent = selectedReturnSensor.id;
@@ -474,7 +459,6 @@
             document.getElementById('registrationComplete').style.display = 'none';
             document.getElementById('returnComplete').style.display = 'block';
 
-            // 本来はここでサーバーに更新リクエストを送信する
             alert('返却が完了しました（デモ）。ページをリロードすると元の状態に戻ります。');
         }
 
