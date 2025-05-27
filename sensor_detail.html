@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>センサ管理システム</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 500px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .sensor-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .step {
+            display: none;
+        }
+        .step.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .secondary-button {
+            background-color: #95a5a6;
+            margin-top: 10px;
+        }
+        .secondary-button:hover {
+            background-color: #7f8c8d;
+        }
+        .status-box {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status-available { background-color: #e8f8f5; border: 1px solid #82e0aa; }
+        .status-inuse { background-color: #fdedec; border: 1px solid #f5b7b1; }
+        .status-returning { background-color: #eaf2f8; border: 1px solid #aed6f1; }
+        .status-icon {
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
+        }
+        .status-text { font-weight: bold; }
+        .available-icon { background-color: #82e0aa; color: white; }
+        .inuse-icon { background-color: #f5b7b1; color: white; }
+        .returning-icon { background-color: #aed6f1; color: white; }
+        .completion-message { text-align: center; padding: 20px 0; }
+        .completion-icon { font-size: 48px; color: #27ae60; margin-bottom: 10px; }
+        .info-panel { background-color: #f8f9fa; border-radius: 4px; padding: 15px; margin-top: 20px; }
+        .info-list { list-style-type: none; padding: 0; }
+        .info-list li { padding: 5px 0; border-bottom: 1px solid #ecf0f1; }
+        .info-list li:last-child { border-bottom: none; }
+        .alert { background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 4px; margin-bottom: 15px; }
+        .choice-buttons { display: flex; gap: 10px; margin: 20px 0; }
+        .choice-button {
+            flex: 1; padding: 20px; border-radius: 8px; text-align: center;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .choice-button.borrow { background-color: #e8f8f5; border: 2px solid #82e0aa; color: #27ae60; }
+        .choice-button.borrow:hover { background-color: #d1f2e4; transform: translateY(-3px); }
+        .choice-button.return { background-color: #eaf2f8; border: 2px solid #aed6f1; color: #3498db; }
+        .choice-button.return:hover { background-color: #d6e9f9; transform: translateY(-3px); }
+        .choice-icon { font-size: 32px; margin-bottom: 10px; }
+        .no-sensors-message {
+            text-align: center; padding: 20px; background-color: #f8f9fa;
+            border-radius: 8px; color: #7f8c8d; margin: 20px 0;
+        }
+        /* QRコード用のスタイル */
+        #qrcode {
+            width: 128px;
+            height: 128px;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            padding: 5px;
+            border-radius: 8px;
+        }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; color: #333; } .container { max-width: 500px; margin: 20px auto; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); padding: 20px; } h1, h2 { color: #2c3e50; margin-bottom: 20px; } .sensor-icon { font-size: 48px; text-align: center; margin-bottom: 20px; } .step { display: none; } .step.active { display: block; } .form-group { margin-bottom: 15px; } label { display: block; margin-bottom: 5px; font-weight: bold; } input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 16px; } button { display: block; width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 10px; transition: background-color 0.3s; } button:hover { background-color: #2980b9; } button:disabled { background-color: #95a5a6; cursor: not-allowed; } .secondary-button { background-color: #95a5a6; margin-top: 10px; } .secondary-button:hover { background-color: #7f8c8d; } .status-box { padding: 15px; margin-bottom: 20px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; } .status-available { background-color: #e8f8f5; border: 1px solid #82e0aa; } .status-inuse { background-color: #fdedec; border: 1px solid #f5b7b1; } .status-returning { background-color: #eaf2f8; border: 1px solid #aed6f1; } .status-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; } .status-text { font-weight: bold; } .available-icon { background-color: #82e0aa; color: white; } .inuse-icon { background-color: #f5b7b1; color: white; } .returning-icon { background-color: #aed6f1; color: white; } .completion-message { text-align: center; padding: 20px 0; } .completion-icon { font-size: 48px; color: #27ae60; margin-bottom: 10px; } .info-panel { background-color: #f8f9fa; border-radius: 4px; padding: 15px; margin-top: 20px; } .info-list { list-style-type: none; padding: 0; } .info-list li { padding: 5px 0; border-bottom: 1px solid #ecf0f1; } .info-list li:last-child { border-bottom: none; } .choice-buttons { display: flex; gap: 10px; margin: 20px 0; } .choice-button { flex: 1; padding: 20px; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.3s; } .choice-button.borrow { background-color: #e8f8f5; border: 2px solid #82e0aa; color: #27ae60; } .choice-button.borrow:hover { background-color: #d1f2e4; transform: translateY(-3px); } .choice-button.return { background-color: #eaf2f8; border: 2px solid #aed6f1; color: #3498db; } .choice-button.return:hover { background-color: #d6e9f9; transform: translateY(-3px); } .choice-icon { font-size: 32px; margin-bottom: 10px; } .no-sensors-message { text-align: center; padding: 20px; background-color: #f8f9fa; border-radius: 8px; color: #7f8c8d; margin: 20px 0; } #qrcode { width: 128px; height: 128px; margin: 20px auto; border: 1px solid #ddd; padding: 5px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p>データを読み込んでいます...</p>
+    </div>
+
+    <script src="sensorManager.js"></script>
+    <script>
+        // --- グローバル変数 ---
+        let sensorData = {};
+        let currentSensorTypeKey;
+        let currentSensorInfo;
+        let selectedReturnSensor = null;
+
+        // データ形式の変換関数 (前回作成したものをそのまま使用)
+        function transformData(newData) {
+            const oldData = {};
+            const typeDetails = {
+                'CAMERA': { name: 'カメラ', icon: '📷' },
+                'LIDAR': { name: 'LiDAR', icon: '📡' },
+                'IMU': { name: 'IMUセンサ', icon: '🧭' },
+                'MOTOR': { name: 'モーター', icon: '⚙️' },
+            };
+            newData.forEach((sensor, index) => {
+                if (!sensor.type || !sensor.model || !sensor.status) { return; }
+                const typeKey = sensor.type.toLowerCase();
+                const details = typeDetails[sensor.type] || { name: sensor.type, icon: '❓' };
+                if (!oldData[typeKey]) { oldData[typeKey] = { name: details.name, icon: details.icon, manufacturers: [], sensors: [] }; }
+                let manufacturer = oldData[typeKey].manufacturers.find(m => m.name === sensor.company);
+                if (!manufacturer && sensor.company) {
+                    manufacturer = { id: oldData[typeKey].manufacturers.length + 1, name: sensor.company };
+                    oldData[typeKey].manufacturers.push(manufacturer);
+                }
+                const uniqueId = `${typeKey.charAt(0).toUpperCase()}${sensor.id || index}`;
+                const newSensor = {
+                    id: uniqueId, model: sensor.model, status: sensor.status === 'free' ? 'available' : 'in-use',
+                    manufacturerId: manufacturer ? manufacturer.id : null, user: null, purpose: null
+                };
+                oldData[typeKey].sensors.push(newSensor);
+            });
+            return oldData;
+        }
+
+        // --- 初期化処理 (GAS対応に変更) ---
+        window.onload = async function() {
+            const container = document.querySelector('.container');
+            const params = new URLSearchParams(window.location.search);
+            currentSensorTypeKey = params.get('type');
+
+            if (!currentSensorTypeKey) {
+                container.innerHTML = '<h1>エラー: センサタイプが指定されていません</h1>';
+                return;
+            }
+
+            const GAS_URL = 'https://script.google.com/macros/s/AKfycbxkkRV4VXcyBNifJlDe9NJsZ2DPC4aPHYmEqm_8H0OIHTpJ09RBU5QUQJ8W4xxIxfdcSQ/exec';
+            const sensorManager = new SensorManager(GAS_URL);
+            
+            try {
+                // sensorManager を使ってGASからデータを取得
+                const newRawData = await sensorManager.fetchSensorStatus();
+                
+                // 取得したデータを既存の形式に変換
+                sensorData = transformData(newRawData);
+                
+                if (!sensorData[currentSensorTypeKey]) {
+                   throw new Error('Invalid sensor type in data.json');
+                }
+                currentSensorInfo = sensorData[currentSensorTypeKey];
+                document.title = `センサ管理システム - ${currentSensorInfo.name}利用登録`;
+                
+                // ページを構築
+                buildPage();
+
+            } catch (error) {
+                console.error('Error:', error);
+                container.innerHTML = '<h1>エラー: データの読み込み、または解析に失敗しました</h1>';
+            }
+        };
+
+        // --- ページ構築 (以降のコードは変更なし) ---
+        function buildPage() {
+            const container = document.querySelector('.container');
+            const sensorName = currentSensorInfo.name;
+
+            container.innerHTML = `
+                <h1>${sensorName}管理</h1>
+                <div class="sensor-icon">${currentSensorInfo.icon}</div>
+                <div id="qrcode-container"><p style="text-align:center; color:#666; margin-bottom:5px;">このページのQRコード</p><div id="qrcode"></div></div>
+                <div class="step active" id="step0">
+                    <h2>操作を選択してください</h2>
+                    <div class="choice-buttons">
+                        <div class="choice-button borrow" onclick="showStep(1)"><div class="choice-icon">📥</div><div class="choice-title">利用登録</div><div class="choice-desc">${sensorName}を借りる</div></div>
+                        <div class="choice-button return" onclick="showStep('0_5')"><div class="choice-icon">📤</div><div class="choice-title">返却登録</div><div class="choice-desc">${sensorName}を返す</div></div>
+                    </div>
+                </div>
+                <div class="step" id="step0_5">
+                    <h2>返却登録</h2><p>お名前を入力してください。登録されている使用中の${sensorName}を検索します。</p>
+                    <div class="form-group"><label for="returnSearchName">お名前</label><input type="text" id="returnSearchName" placeholder="例: 山田太郎"></div>
+                    <button onclick="searchUserSensors()">検索</button><button class="secondary-button" onclick="resetForm()">戻る</button>
+                </div>
+                <div class="step" id="step0_6">
+                    <h2>返却する${sensorName}を選択</h2><p><span id="returnerNameDisplay"></span>さんが使用中の${sensorName}</p>
+                    <div id="userSensorsContainer"></div>
+                    <div class="form-group" id="userSensorSelectContainer" style="display: none;"><label for="userSensorSelect">返却する${sensorName}</label><select id="userSensorSelect"><option value="">選択してください</option></select></div>
+                    <button id="confirmReturnButton" onclick="confirmReturn()" style="display: none;">返却手続きへ</button><button class="secondary-button" onclick="resetForm()">戻る</button>
+                </div>
+                <div class="step" id="step1">
+                    <h2>${sensorName}利用登録</h2>
+                    <div class="form-group"><label for="sensorMaker">メーカー</label><select id="sensorMaker" onchange="updateSensorIds()"><option value="">選択してください</option></select></div>
+                    <div class="form-group"><label for="sensorId">${sensorName}ID</label><select id="sensorId" disabled><option value="">メーカーを先に選択してください</option></select></div>
+                    <button onclick="checkStatus()">確認</button><button class="secondary-button" onclick="resetForm()">戻る</button>
+                </div>
+                <div class="step" id="step2">
+                    <div id="statusAvailable" style="display: none;">
+                        <div class="status-box status-available"><div><p>ステータス</p><p class="status-text">利用可能</p></div><div class="status-icon available-icon">✓</div></div>
+                        <div class="form-group"><label for="userName">お名前</label><input type="text" id="userName" placeholder="例: 山田太郎"></div>
+                        <div class="form-group"><label for="purpose">用途</label><input type="text" id="purpose" placeholder="例: 実験、研究など"></div>
+                        <button onclick="registerUsage()">利用登録する</button><button class="secondary-button" onclick="resetForm()">戻る</button>
+                    </div>
+                    <div id="statusReturning" style="display: none;">
+                        <div class="status-box status-returning"><div><p>ステータス</p><p class="status-text">返却処理</p></div><div class="status-icon returning-icon">↔</div></div>
+                        <div class="info-panel">
+                            <h3>返却情報</h3>
+                            <ul class="info-list">
+                                <li>メーカー: <span id="returnInfoMaker"></span></li><li>ID: <span id="returnInfoId"></span></li><li>モデル: <span id="returnInfoModel"></span></li><li>使用者: <span id="returnInfoUser"></span></li>
+                            </ul>
+                        </div>
+                        <div class="form-group"><label for="returnComment">返却コメント（任意）</label><input type="text" id="returnComment" placeholder="故障や不具合があれば記入してください"></div>
+                        <button onclick="returnSensor()">返却する</button><button class="secondary-button" onclick="resetForm()">戻る</button>
+                    </div>
+                </div>
+                <div class="step" id="step3">
+                    <div id="registrationComplete" style="display: none;">
+                        <div class="completion-message"><div class="completion-icon">✓</div><h2>利用登録完了</h2><p>${sensorName}の利用が登録されました。</p></div>
+                        <div class="info-panel"><h3>登録情報</h3><ul class="info-list"><li>メーカー: <span id="summaryMaker"></span></li><li>ID: <span id="summaryId"></span></li><li>モデル: <span id="summaryModel"></span></li><li>利用者: <span id="summaryUser"></span></li><li>用途: <span id="summaryPurpose"></span></li><li>ステータス: <span>使用中</span></li></ul></div>
+                        <button onclick="resetForm()">トップに戻る</button>
+                    </div>
+                    <div id="returnComplete" style="display: none;">
+                        <div class="completion-message"><div class="completion-icon">✓</div><h2>返却完了</h2><p>${sensorName}が正常に返却されました。</p></div>
+                        <div class="info-panel"><h3>返却情報</h3><ul class="info-list"><li>メーカー: <span id="returnSummaryMaker"></span></li><li>ID: <span id="returnSummaryId"></span></li><li>モデル: <span id="returnSummaryModel"></span></li><li>返却者: <span id="returnSummaryUser"></span></li><li>コメント: <span id="returnSummaryComment"></span></li><li>ステータス: <span>利用可能</span></li></ul></div>
+                        <button onclick="resetForm()">トップに戻る</button>
+                    </div>
+                </div>
+            `;
+            new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 128, height: 128 });
+            populateMakers();
+        }
+        function populateMakers() {
+            const makerSelect = document.getElementById('sensorMaker');
+            makerSelect.innerHTML = '<option value="">選択してください</option>';
+            currentSensorInfo.manufacturers.forEach(maker => {
+                const option = document.createElement('option');
+                option.value = maker.id;
+                option.textContent = maker.name;
+                makerSelect.appendChild(option);
+            });
+        }
+        function showStep(stepNumber) {
+            document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
+            const targetStep = document.getElementById('step' + stepNumber);
+            if(targetStep) targetStep.classList.add('active');
+            document.getElementById('qrcode-container').style.display = (stepNumber === '0' || stepNumber === 0) ? 'block' : 'none';
+        }
+        function searchUserSensors() {
+            const userName = document.getElementById('returnSearchName').value;
+            if (!userName) { alert('お名前を入力してください'); return; }
+            document.getElementById('returnerNameDisplay').textContent = userName;
+            const userSensors = currentSensorInfo.sensors.filter(s => s.status === 'in-use' && s.user === userName);
+            const container = document.getElementById('userSensorsContainer');
+            const selectContainer = document.getElementById('userSensorSelectContainer');
+            const select = document.getElementById('userSensorSelect');
+            const confirmButton = document.getElementById('confirmReturnButton');
+            select.innerHTML = '<option value="">選択してください</option>';
+            if (userSensors.length === 0) {
+                container.innerHTML = `<div class="no-sensors-message"><p>該当する${currentSensorInfo.name}が見つかりません</p></div>`;
+                selectContainer.style.display = 'none';
+                confirmButton.style.display = 'none';
+            } else {
+                let html = '<div class="info-panel"><ul class="info-list">';
+                userSensors.forEach(sensor => {
+                    const maker = currentSensorInfo.manufacturers.find(m => m.id === sensor.manufacturerId);
+                    const makerName = maker ? maker.name : '不明';
+                    html += `<li><strong>${makerName} ${sensor.model}</strong><br>ID: ${sensor.id}<br>用途: ${sensor.purpose || '記載なし'}</li>`;
+                    const option = document.createElement('option');
+                    option.value = sensor.id;
+                    option.textContent = `${makerName} ${sensor.model} (${sensor.id})`;
+                    select.appendChild(option);
+                });
+                html += '</ul></div>';
+                container.innerHTML = html;
+                selectContainer.style.display = 'block';
+                confirmButton.style.display = 'block';
+            }
+            showStep('0_6');
+        }
+        function confirmReturn() {
+            const sensorId = document.getElementById('userSensorSelect').value;
+            if (!sensorId) { alert(`返却する${currentSensorInfo.name}を選択してください`); return; }
+            selectedReturnSensor = currentSensorInfo.sensors.find(s => s.id === sensorId);
+            const userName = document.getElementById('returnSearchName').value;
+            const maker = currentSensorInfo.manufacturers.find(m => m.id === selectedReturnSensor.manufacturerId);
+            const makerName = maker ? maker.name : '不明';
+            document.getElementById('returnInfoMaker').textContent = makerName;
+            document.getElementById('returnInfoId').textContent = selectedReturnSensor.id;
+            document.getElementById('returnInfoModel').textContent = selectedReturnSensor.model;
+            document.getElementById('returnInfoUser').textContent = userName;
+            showStep(2);
+            document.getElementById('statusAvailable').style.display = 'none';
+            document.getElementById('statusReturning').style.display = 'block';
+        }
+        function updateSensorIds() {
+            const makerId = parseInt(document.getElementById('sensorMaker').value, 10);
+            const sensorIdSelect = document.getElementById('sensorId');
+            sensorIdSelect.innerHTML = '<option value="">選択してください</option>';
+            if (!makerId) { sensorIdSelect.disabled = true; return; }
+            const availableIds = currentSensorInfo.sensors.filter(s => s.status === 'available' && s.manufacturerId === makerId);
+            if (availableIds.length === 0) {
+                sensorIdSelect.innerHTML = `<option value="" disabled>利用可能な${currentSensorInfo.name}はありません</option>`;
+            } else {
+                availableIds.forEach(idInfo => {
+                    const option = document.createElement('option');
+                    option.value = idInfo.id;
+                    option.textContent = `${idInfo.id} - ${idInfo.model}`;
+                    sensorIdSelect.appendChild(option);
+                });
+            }
+            sensorIdSelect.disabled = false;
+        }
+        function checkStatus() {
+            const sensorId = document.getElementById('sensorId').value;
+            if (!sensorId) { alert(`メーカーと${currentSensorInfo.name}IDを選択してください`); return; }
+            showStep(2);
+            document.getElementById('statusAvailable').style.display = 'block';
+            document.getElementById('statusReturning').style.display = 'none';
+        }
+        function registerUsage() {
+            const userName = document.getElementById('userName').value;
+            const purpose = document.getElementById('purpose').value;
+            if (!userName || !purpose) { alert('お名前と用途を入力してください'); return; }
+            const sensorId = document.getElementById('sensorId').value;
+            const sensor = currentSensorInfo.sensors.find(s => s.id === sensorId);
+            const makerId = parseInt(document.getElementById('sensorMaker').value, 10);
+            const maker = currentSensorInfo.manufacturers.find(m => m.id === makerId);
+            document.getElementById('summaryMaker').textContent = maker ? maker.name : '不明';
+            document.getElementById('summaryId').textContent = sensor.id;
+            document.getElementById('summaryModel').textContent = sensor.model;
+            document.getElementById('summaryUser').textContent = userName;
+            document.getElementById('summaryPurpose').textContent = purpose;
+            showStep(3);
+            document.getElementById('registrationComplete').style.display = 'block';
+            document.getElementById('returnComplete').style.display = 'none';
+            alert('利用登録が完了しました（デモ）。ページをリロードすると元の状態に戻ります。');
+        }
+        function returnSensor() {
+            const returnComment = document.getElementById('returnComment').value || 'なし';
+            const userName = document.getElementById('returnSearchName').value;
+            const makerName = document.getElementById('returnInfoMaker').textContent;
+            document.getElementById('returnSummaryMaker').textContent = makerName;
+            document.getElementById('returnSummaryId').textContent = selectedReturnSensor.id;
+            document.getElementById('returnSummaryModel').textContent = selectedReturnSensor.model;
+            document.getElementById('returnSummaryUser').textContent = userName;
+            document.getElementById('returnSummaryComment').textContent = returnComment;
+            showStep(3);
+            document.getElementById('registrationComplete').style.display = 'none';
+            document.getElementById('returnComplete').style.display = 'block';
+            alert('返却が完了しました（デモ）。ページをリロードすると元の状態に戻ります。');
+        }
+        function resetForm() { buildPage(); }
+    </script>
+</body>
+</html>

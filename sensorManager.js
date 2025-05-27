@@ -1,28 +1,34 @@
+// センサーのデータを取得するためのクラス
+
 class SensorManager {
     constructor(gasUrl) {
         this.gasUrl = gasUrl;
         this.status = '未取得';
-        this.freeSensors = null;  // 空きセンサー情報を保存
+        this.data = null;
+        this.sensorDetails = null;  // センサー詳細を保存するプロパティを追加
     }
 
     async fetchSensorStatus() {
         try {
+            //取得中という言葉を表示する
             const statusElement = document.getElementById('status');
-                
-            statusElement.textContent = '状態: 取得中...';
-            this.status = '取得中...';
-            console.log('データ取得開始:', this.gasUrl);  // デバッグ用
+            statusElement.textContent = '取得中...';
 
+            this.status = '取得中...';
+            //statusElement.textContent = '取得中...';
             const response = await fetch(this.gasUrl);
+            
             const data = await response.json();
             
-            // 受け取ったデータをログ出力
-            console.log('GASから受け取ったデータ:', data);
+            // 受け取ったデータをログ出力して確認
+            console.log('Received data:', data);
             
-            this.freeSensors = data;  // 空きセンサー情報を保存
+            this.data = data;
+            // GASから返ってきたallSensorDetailsを保存
+            this.sensorDetails = data;  // この時点でallSensorDetailsが入っている
+            
             this.status = '取得成功';
-            statusElement.textContent = '状態: 取得成功';
-            
+        
             return data;
         } catch (error) {
             console.error('エラー:', error);
@@ -31,25 +37,57 @@ class SensorManager {
         }
     }
 
-    // 空きセンサーの一覧を取得
-    getFreeSensors() {
-        return this.freeSensors;
+    // センサー詳細を取得するメソッドを追加
+    getSensorDetails() {
+
+        return this.sensorDetails;
     }
 
-    // 特定のタイプの空きセンサーを取得
-    getFreeSensorsByType(type) {
-        if (!this.freeSensors) return [];
-        return this.freeSensors.filter(sensor => sensor.type === type);
+    // 特定のタイプと型番のセンサーIDを取得するメソッドを追加
+    getSpecificSensorIds(type, model) {
+        if (!this.sensorDetails) return [];
+        
+        return this.sensorDetails
+            .filter(sensor => 
+                sensor.type === type && 
+                sensor.model === model
+            )
+            .map(sensor => sensor.id);
     }
 
-    // 特定のモデルの空きセンサーを取得
-    getFreeSensorsByModel(model) {
-        if (!this.freeSensors) return [];
-        return this.freeSensors.filter(sensor => sensor.model === model);
+    // WebCam C920nのIDを取得する専用メソッド（例として）
+    getWebCamC920nIds() {
+        return this.getSpecificSensorIds('CAMERA', 'WebCam C920n');
     }
 
     getStatus() {
         return this.status;
+    }
+
+    getData() {
+        return this.data;
+    }
+
+    formatData() {
+        if (!this.data || !this.data.sensors) return null;
+        
+        // センサータイプごとにグループ化
+        const groupedSensors = this.data.sensors.reduce((acc, sensor) => {
+            if (!acc[sensor.type]) {
+                acc[sensor.type] = [];
+            }
+            acc[sensor.type].push(sensor);
+            return acc;
+        }, {});
+
+        return {
+            summary: {
+                total: this.data.sensors.length,
+                updated: this.data.updated,
+                types: Object.keys(groupedSensors).length
+            },
+            sensorsByType: groupedSensors
+        };
     }
 }
 

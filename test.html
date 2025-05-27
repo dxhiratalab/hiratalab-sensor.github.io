@@ -1,113 +1,92 @@
+<!-- test.html -->
+<!--センサーのデータを取得するためのテストページ-->
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>空きセンサー確認</title>
-    <style>
-        body { font-family: sans-serif; margin: 20px; }
-        .sensor-item { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
-        .sensor-item p { margin: 5px 0; }
-        .sensor-item button { margin-top: 5px; padding: 8px 12px; background-color: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
-        .sensor-item button:hover { background-color: #0056b3; }
-        #sensorData { margin-top: 15px; }
-        #status { font-weight: bold; }
-    </style>
+    <title>センサー接続テスト</title>
 </head>
 <body>
-    <h1>空きセンサー一覧</h1>
-    <button onclick="updateSensorStatus()">更新リスト (Refresh List)</button>
-    <p id="status">状態: 未取得</p>
-    <div id="sensorDataContainer">
-        </div>
+    <h1>センサー接続テスト</h1>
+    
+    <div id="testControls">
+        <!-- <button onclick="testConnecti  on()">接続テスト実行</button> -->
+        <button onclick="fetchSensorData()">センサーデータ取得</button>
+        <p id="status">状態: 未実行</p>
+        <pre id="result"></pre>
+    </div>
+
+    <div id="sensorData">
+        <h2>センサーデータ</h2>
+        <pre id="allSensors"></pre>
+        <pre id="webcamIds"></pre>
+    </div>
 
     <script src="sensorManager.js"></script>
     <script>
-        const manager = new SensorManager('https://script.google.com/macros/s/AKfycbybFSu-65PGxJickvD0xNabGHTQZPXVaf9ysxZZs0SqXnpKg4yzUUbexww2whtymudW/exec'); // Make sure this URL is your deployed web app URL
-
-        async function updateSensorStatus() {
-            const statusElement = document.getElementById('status');
-            const sensorDataContainer = document.getElementById('sensorDataContainer');
+        // GASのURL
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxkkRV4VXcyBNifJlDe9NJsZ2DPC4aPHYmEqm_8H0OIHTpJ09RBU5QUQJ8W4xxIxfdcSQ/exec';
+        const sensorManager = new SensorManager(GAS_URL);
+        
+        // // 接続テスト
+        // async function testConnection() {
+        //     const statusElement = document.getElementById('status');
+        //     const resultElement = document.getElementById('result');
             
+        //     statusElement.textContent = '接続テスト実行中...';
+        //     const result = await sensorManager.testConnection();
+            
+        //     statusElement.textContent = `状態: ${sensorManager.getStatus()}`;
+        //     resultElement.textContent = JSON.stringify(result, null, 2);
+        // }
+        
+        // センサーデータ取得
+        async function fetchSensorData() {
             try {
-                statusElement.textContent = '状態: 取得中...';
-                sensorDataContainer.innerHTML = '<p>Loading sensors...</p>'; // Clear previous data and show loading
+                const statusElement = document.getElementById('status');
+                statusElement.textContent = 'データ取得を開始します';
+                const data = await sensorManager.fetchSensorStatus();
+                // statusElement.textContent = 'データ取得中...';
+                //console.log(data);
+
+                //センサー詳細が取得できているか確認し、表示
+                const sensorDetails = sensorManager.getSensorDetails();
+                console.log(sensorDetails);
+
+                const allSensors = sensorManager.getSensorDetails();
+                console.log(allSensors);
                 
-                // Data fetch is handled by manager.fetchSensorStatus()
-                const freeSensors = await manager.fetchSensorStatus(); // Assumes this now fetches only free sensors due to GAS changes
+                //htmlにも取得できるているかを表示する
+                document.getElementById('allSensors').textContent = 
+                    JSON.stringify(data, null, 2);
+                statusElement.textContent = 'データ取得中......';
+
+
+                // 全センサー情報を表示
+                document.getElementById('allSensors').textContent = 
+                    JSON.stringify(allSensors, null, 2);
                 
-                statusElement.textContent = `状態: ${manager.getStatus()}`;
+                // WebCam C920nのIDを表示
+                const webcamIds = sensorManager.getWebCamC920nIds();
+                document.getElementById('webcamIds').textContent = 
+                    JSON.stringify(webcamIds, null, 2);
                 
-                displaySensors(freeSensors); // Display the fetched sensors
-                
-                console.log('表示中の空きセンサー (Displayed Free Sensors):', freeSensors);
+                // コンソールにも出力   
+                console.log('All sensor details:', allSensors);
+                console.log('WebCam C920n IDs:', webcamIds);
             } catch (error) {
-                console.error('エラー (Error in updateSensorStatus):', error);
-                statusElement.textContent = '状態: エラーが発生しました (Error occurred)';
-                sensorDataContainer.innerHTML = '<p>Could not load sensor data.</p>';
+                console.error('Error:', error);
+                document.getElementById('allSensors').textContent = 'エラーが発生しました';
             }
         }
 
-        function displaySensors(sensors) {
-            const sensorDataContainer = document.getElementById('sensorDataContainer');
-            sensorDataContainer.innerHTML = ''; // Clear previous content
-
-            if (!sensors || sensors.length === 0) {
-                sensorDataContainer.innerHTML = '<p>利用可能な空きセンサーはありません (No free sensors available).</p>';
-                return;
-            }
-
-            sensors.forEach(sensor => {
-                const sensorDiv = document.createElement('div');
-                sensorDiv.className = 'sensor-item';
-                sensorDiv.innerHTML = `
-                    <p><strong>タイプ (Type):</strong> ${sensor.type}</p>
-                    <p><strong>モデル (Model):</strong> ${sensor.model}</p>
-                    <p><strong>ID:</strong> ${sensor.id}</p>
-                    <p><strong>会社 (Company):</strong> ${sensor.company}</p>
-                    <p><strong>状態 (Status):</strong> ${sensor.status}</p>
-                    <button onclick="markSensorInUse('${sensor.id}', '${sensor.type}')">使用中にする (Mark as In Use)</button>
-                `;
-                sensorDataContainer.appendChild(sensorDiv);
-            });
-        }
-
-        async function markSensorInUse(sensorId, sensorType) {
-            const statusElement = document.getElementById('status');
-            statusElement.textContent = `状態: センサー ${sensorId} を更新中... (Updating sensor ${sensorId}...)`;
-
-            const payload = {
-                id: sensorId,
-                type: sensorType, // This is the sheet name
-                status: 'in use'
-            };
-
-            try {
-                const response = await fetch(manager.gasUrl, { // Use the same URL
-                    method: 'POST',
-                    // mode: 'cors', // Usually not needed for simple POST to GAS if deployed with "Anyone" access
-                    // fetch often defaults Content-Type to 'text/plain' for stringified JSON, which GAS doPost handles in e.postData.contents
-                    body: JSON.stringify(payload) 
-                });
-
-                const result = await response.json(); // Expecting JSON response from doPost
-
-                if (result.success) {
-                    statusElement.textContent = `状態: ${result.message}`;
-                    alert(`成功 (Success): ${result.message}`);
-                    updateSensorStatus(); // Refresh the list of sensors
-                } else {
-                    statusElement.textContent = `状態: 更新エラー (Update Error): ${result.message}`;
-                    alert(`エラー (Error): ${result.message}`);
-                }
-            } catch (error) {
-                console.error('Error marking sensor in use:', error);
-                statusElement.textContent = '状態: 更新失敗。詳細はコンソールを確認してください。 (Update failed. Check console for details.)';
-                alert('センサーの状態更新に失敗しました (Failed to update sensor status).');
-            }
-        }
-
-        // Optionally, load sensors on page load
-        // window.onload = updateSensorStatus;
+        // ページ読み込み時に自動で接続テスト実行
+        window.addEventListener('load', testConnection);
     </script>
 </body>
 </html>
+
+<!--テストのコマンド-->
+<!--
+http://localhost:8000/test.html
+-->
