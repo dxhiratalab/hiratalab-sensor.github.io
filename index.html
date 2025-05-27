@@ -100,8 +100,9 @@
     <script src="sensorManager.js"></script>
     <script>
         let sensorData = {};
+        let sensorManager;
 
-        // データ形式の変換関数 (前回作成したものをそのまま使用)
+        // データ形式の変換関数
         function transformData(newData) {
             const oldData = {};
             const typeDetails = {
@@ -139,37 +140,18 @@
                     model: sensor.model,
                     status: sensor.status === 'free' ? 'available' : 'in-use',
                     manufacturerId: manufacturer ? manufacturer.id : null,
-                    user: null,
-                    purpose: null
+                    company: sensor.company,
+                    type: sensor.type,
+                    user: sensor.user || null,
+                    purpose: sensor.purpose || null,
+                    lastUpdated: sensor.lastUpdated || new Date().toISOString()
                 };
                 oldData[typeKey].sensors.push(newSensor);
             });
             return oldData;
         }
 
-        // 画面ロード時の処理をGAS対応に変更
-        window.onload = async function() {
-            const sensorGrid = document.getElementById('sensorGrid');
-            const GAS_URL = 'https://script.google.com/macros/s/AKfycbyo7WCmt1DTmQ9rrIHo4zDmBnRkk0oBG1s0IcNDVr-dYywKpSJavBalIpIZiQvuQQhizw/exec';
-            const sensorManager = new SensorManager(GAS_URL);
-
-            try {
-                // sensorManager を使ってGASからデータを取得
-                const newRawData = await sensorManager.fetchSensorStatus();
-                
-                // 取得したデータを既存の形式に変換
-                sensorData = transformData(newRawData);
-                
-                // 画面をレンダリング
-                renderSensorTypes();
-
-            } catch (error) {
-                console.error('Fetch error:', error);
-                sensorGrid.innerHTML = '<p>データの読み込みに失敗しました。管理者にお問い合わせください。</p>';
-            }
-        };
-
-        // センサ種類のレンダリング (この関数は変更不要)
+        // レンダリング関数
         function renderSensorTypes() {
             const sensorGrid = document.getElementById('sensorGrid');
             sensorGrid.innerHTML = '';
@@ -181,6 +163,7 @@
 
                 const card = document.createElement('div');
                 card.className = 'sensor-card';
+                
                 card.innerHTML = `
                     <div class="sensor-icon">${sensor.icon}</div>
                     <div class="sensor-name">${sensor.name}</div>
@@ -189,9 +172,25 @@
                     </div>
                     <button class="button" onclick="location.href='sensor_detail.html?type=${typeKey}'">詳細・QRコード</button>
                 `;
+                
                 sensorGrid.appendChild(card);
             }
         }
+
+        // 初期化
+        window.onload = async function() {
+            sensorManager = new SensorManager('https://script.google.com/macros/s/AKfycbyo7WCmt1DTmQ9rrIHo4zDmBnRkk0oBG1s0IcNDVr-dYywKpSJavBalIpIZiQvuQQhizw/exec');
+
+            try {
+                const newRawData = await sensorManager.fetchAllSensors();
+                sensorData = transformData(newRawData);
+                renderSensorTypes();
+            } catch (error) {
+                console.error('Fetch error:', error);
+                document.getElementById('sensorGrid').innerHTML = 
+                    '<p>データの読み込みに失敗しました。管理者にお問い合わせください。</p>';
+            }
+        };
     </script>
 </body>
 </html>

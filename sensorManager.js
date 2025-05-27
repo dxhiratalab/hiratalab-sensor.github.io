@@ -1,60 +1,81 @@
-// sensorManager.js
 class SensorManager {
     constructor(gasUrl) {
         this.gasUrl = gasUrl;
-        this.fetchStatus = '未取得'; // fetch操作の一般ステータス
-        this.freeSensorList = null;
-        this.inUseSensorList = null;
+        this.fetchStatus = '未取得';
     }
 
-    async _fetchSensorData(statusType) {
-        // GAS URLに既に '?' が含まれているか確認して正しくパラメータを連結
+    async _fetchSensorData(params = {}) {
         const paramSeparator = this.gasUrl.includes('?') ? '&' : '?';
-        let fetchUrl = this.gasUrl + paramSeparator + 'statusType=' + encodeURIComponent(statusType);
+        let fetchUrl = this.gasUrl;
         
-        this.fetchStatus = `取得中 (${statusType})...`;
-        console.log(`Workspaceing ${statusType} sensors from: ${fetchUrl}`); // URLをログに出力
+        if (Object.keys(params).length > 0) {
+            const queryParams = new URLSearchParams(params);
+            fetchUrl += paramSeparator + queryParams.toString();
+        }
+        
+        this.fetchStatus = '取得中...';
 
         try {
             const response = await fetch(fetchUrl);
             if (!response.ok) {
-                this.fetchStatus = `取得失敗 (${statusType}): ${response.status}`;
-                throw new Error(`HTTP error! status: ${response.status} for ${statusType} sensors`);
+                this.fetchStatus = `取得失敗: ${response.status}`;
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-            this.fetchStatus = `取得成功 (${statusType})`;
-            console.log(`Received ${statusType} sensors:`, data);
+            this.fetchStatus = '取得成功';
             return data;
         } catch (error) {
-            this.fetchStatus = `取得失敗 (${statusType}): ${error.message}`;
-            console.error(`Error fetching ${statusType} sensors:`, error);
-            throw error; // エラーを再スローして呼び出し元で処理できるようにする
+            this.fetchStatus = `取得失敗: ${error.message}`;
+            throw error;
         }
     }
 
+    async updateSensorStatus(sensorId, sensorType, newStatus, userData = {}) {
+        const payload = {
+            id: sensorId,
+            type: sensorType,
+            status: newStatus,
+            ...userData
+        };
+
+        try {
+            const response = await fetch(this.gasUrl, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error updating sensor status:', error);
+            throw error;
+        }
+    }
+
+    async fetchAllSensors() {
+        return this._fetchSensorData();
+    }
+
+    async fetchSensorsByStatus(status) {
+        return this._fetchSensorData({ statusType: status });
+    }
+
     async fetchFreeSensors() {
-        this.freeSensorList = await this._fetchSensorData('free');
-        return this.freeSensorList;
+        return this.fetchSensorsByStatus('free');
     }
 
     async fetchInUseSensors() {
-        this.inUseSensorList = await this._fetchSensorData('in use');
-        return this.inUseSensorList;
+        return this.fetchSensorsByStatus('in use');
     }
-
-    // getFreeSensors() は fetchFreeSensors の結果を返すようにするか、
-    // または fetchFreeSensors が直接リストを返すので不要になるかもしれません。
-    // ここでは、fetchメソッドがリストを直接返すので、個別のgetterは必須ではないかもしれません。
-    // 必要に応じて残すか、fetchメソッドの結果を直接利用します。
-    // getFreeSensors() { return this.freeSensorList; }
-    // getInUseSensors() { return this.inUseSensorList; }
 
     getFetchStatus() {
         return this.fetchStatus;
     }
 }
 
-// ブラウザ環境でも使えるようにグローバルに公開
 if (typeof window !== 'undefined') {
     window.SensorManager = SensorManager;
 }
