@@ -124,7 +124,7 @@
     <div class="container">
         </div>
 
-    <script>
+<script>
         // --- グローバル変数 ---
         let sensorData = {};
         let currentSensorTypeKey;
@@ -300,6 +300,44 @@
             const targetStep = document.getElementById('step' + stepNumber);
             if(targetStep) targetStep.classList.add('active');
         }
+        
+        // --- ★ 修正箇所 ---
+        // センサ情報からメーカー名を特定するヘルパー関数
+        function getManufacturerNameForSensor(sensor) {
+            const sensorId = sensor.id;
+            let makerName = null;
+
+            switch (currentSensorTypeKey) {
+                case 'camera':
+                    if (sensorId.startsWith('C')) makerName = 'Canon';
+                    else if (sensorId.startsWith('N')) makerName = 'Nikon';
+                    else if (sensorId.startsWith('S')) makerName = 'Sony';
+                    else if (sensorId.startsWith('P')) makerName = 'Panasonic';
+                    break;
+                case 'lidar':
+                    if (sensorId.startsWith('VLP')) makerName = 'Velodyne';
+                    else if (sensorId.startsWith('OS')) makerName = 'Ouster';
+                    else if (sensorId.startsWith('LMS')) makerName = 'SICK';
+                    else if (sensorId.startsWith('HOR')) makerName = 'Livox';
+                    break;
+                case 'temperature':
+                    if (sensorId.startsWith('TP-PA')) makerName = 'Panasonic';
+                    else if (sensorId.startsWith('TP-OM')) makerName = 'OMRON';
+                    else if (sensorId.startsWith('TP-KY')) makerName = 'KEYENCE';
+                    break;
+                case 'pressure':
+                    if (sensorId.startsWith('PS-OM')) makerName = 'OMRON';
+                    else if (sensorId.startsWith('PS-YK')) makerName = 'Yokogawa';
+                    else if (sensorId.startsWith('PS-KY')) makerName = 'KEYENCE';
+                    break;
+                case 'distance':
+                    if (sensorId.startsWith('DS-KY')) makerName = 'KEYENCE';
+                    else if (sensorId.startsWith('DS-SI')) makerName = 'SICK';
+                    else if (sensorId.startsWith('DS-OM')) makerName = 'OMRON';
+                    break;
+            }
+            return makerName;
+        }
 
         // --- 返却フロー ---
         function searchUserSensors() {
@@ -323,7 +361,7 @@
             } else {
                 let html = '<div class="info-panel"><ul class="info-list">';
                 userSensors.forEach(sensor => {
-                    const makerName = currentSensorInfo.manufacturers.find(m => sensor.id.startsWith(m.name.substring(0,2).toUpperCase()))?.name || '不明';
+                    const makerName = getManufacturerNameForSensor(sensor) || '不明';
                     html += `<li><strong>${makerName} ${sensor.model}</strong><br>ID: ${sensor.id}<br>用途: ${sensor.purpose || '記載なし'}</li>`;
                     
                     const option = document.createElement('option');
@@ -345,7 +383,7 @@
 
             selectedReturnSensor = currentSensorInfo.sensors.find(s => s.id === sensorId);
             const userName = document.getElementById('returnSearchName').value;
-            const makerName = currentSensorInfo.manufacturers.find(m => selectedReturnSensor.id.startsWith(m.name.substring(0,2).toUpperCase()))?.name || '不明';
+            const makerName = getManufacturerNameForSensor(selectedReturnSensor) || '不明';
 
             document.getElementById('returnInfoMaker').textContent = makerName;
             document.getElementById('returnInfoId').textContent = selectedReturnSensor.id;
@@ -357,6 +395,7 @@
             document.getElementById('statusReturning').style.display = 'block';
         }
 
+        // --- ★ 修正箇所 ---
         // --- 貸出フロー ---
         function updateSensorIds() {
             const makerName = document.getElementById('sensorMaker').value;
@@ -369,8 +408,8 @@
             }
 
             const availableIds = currentSensorInfo.sensors.filter(s => {
-                const maker = currentSensorInfo.manufacturers.find(m => s.id.startsWith(m.name.substring(0,2).toUpperCase()));
-                return s.status === 'available' && maker?.name === makerName;
+                // 修正されたロジック：getManufacturerNameForSensor関数でメーカーを特定する
+                return s.status === 'available' && getManufacturerNameForSensor(s) === makerName;
             });
             
             if (availableIds.length === 0) {
