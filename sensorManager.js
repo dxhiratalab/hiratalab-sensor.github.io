@@ -11,8 +11,8 @@ class SensorManager {
     async fetchSensorStatus() {
         try {
             //取得中という言葉を表示する
-            const statusElement = document.getElementById('status');
-            statusElement.textContent = '取得中...';
+            // const statusElement = document.getElementById('status');
+            // statusElement.textContent = '取得中...';
 
             this.status = '取得中...';
             //statusElement.textContent = '取得中...';
