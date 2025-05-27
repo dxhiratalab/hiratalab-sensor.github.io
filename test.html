@@ -3,44 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <title>空きセンサー確認</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .sensor-item { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        .sensor-item p { margin: 5px 0; }
+        .sensor-item button { margin-top: 5px; padding: 8px 12px; background-color: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        .sensor-item button:hover { background-color: #0056b3; }
+        #sensorData { margin-top: 15px; }
+        #status { font-weight: bold; }
+    </style>
 </head>
 <body>
     <h1>空きセンサー一覧</h1>
-    <button onclick="updateSensorStatus()">更新</button>
+    <button onclick="updateSensorStatus()">更新リスト (Refresh List)</button>
     <p id="status">状態: 未取得</p>
-    <pre id="sensorData"></pre>
+    <div id="sensorDataContainer">
+        </div>
 
     <script src="sensorManager.js"></script>
     <script>
-        const manager = new SensorManager('https://script.google.com/macros/s/AKfycbybFSu-65PGxJickvD0xNabGHTQZPXVaf9ysxZZs0SqXnpKg4yzUUbexww2whtymudW/exec');
+        const manager = new SensorManager('https://script.google.com/macros/s/AKfycbybFSu-65PGxJickvD0xNabGHTQZPXVaf9ysxZZs0SqXnpKg4yzUUbexww2whtymudW/exec'); // Make sure this URL is your deployed web app URL
 
         async function updateSensorStatus() {
+            const statusElement = document.getElementById('status');
+            const sensorDataContainer = document.getElementById('sensorDataContainer');
+            
             try {
-                //const statusElement = document.getElementById('status');
-                const dataElement = document.getElementById('sensorData');
+                statusElement.textContent = '状態: 取得中...';
+                sensorDataContainer.innerHTML = '<p>Loading sensors...</p>'; // Clear previous data and show loading
                 
-                //statusElement.textContent = '状態: 取得中...';
+                // Data fetch is handled by manager.fetchSensorStatus()
+                const freeSensors = await manager.fetchSensorStatus(); // Assumes this now fetches only free sensors due to GAS changes
                 
-                // データ取得
-                const data = await manager.fetchSensorStatus();
-                // console.log(data);
-                // 取得したデータの表示
-                dataElement.textContent = JSON.stringify(data, null, 2);
-                
-                // 状態を更新
                 statusElement.textContent = `状態: ${manager.getStatus()}`;
                 
-                // 空きセンサーデータを表示
-                const freeSensors = manager.getFreeSensors();
-                dataElement.textContent = JSON.stringify(freeSensors, null, 2);
+                displaySensors(freeSensors); // Display the fetched sensors
                 
-                // デバッグ用にコンソールにも出力
-                console.log('空きセンサー:', freeSensors);
+                console.log('表示中の空きセンサー (Displayed Free Sensors):', freeSensors);
             } catch (error) {
-                console.error('エラー:', error);
-                document.getElementById('status').textContent = '状態: エラーが発生しました';
+                console.error('エラー (Error in updateSensorStatus):', error);
+                statusElement.textContent = '状態: エラーが発生しました (Error occurred)';
+                sensorDataContainer.innerHTML = '<p>Could not load sensor data.</p>';
             }
         }
+
+        function displaySensors(sensors) {
+            const sensorDataContainer = document.getElementById('sensorDataContainer');
+            sensorDataContainer.innerHTML = ''; // Clear previous content
+
+            if (!sensors || sensors.length === 0) {
+                sensorDataContainer.innerHTML = '<p>利用可能な空きセンサーはありません (No free sensors available).</p>';
+                return;
+            }
+
+            sensors.forEach(sensor => {
+                const sensorDiv = document.createElement('div');
+                sensorDiv.className = 'sensor-item';
+                sensorDiv.innerHTML = `
+                    <p><strong>タイプ (Type):</strong> ${sensor.type}</p>
+                    <p><strong>モデル (Model):</strong> ${sensor.model}</p>
+                    <p><strong>ID:</strong> ${sensor.id}</p>
+                    <p><strong>会社 (Company):</strong> ${sensor.company}</p>
+                    <p><strong>状態 (Status):</strong> ${sensor.status}</p>
+                    <button onclick="markSensorInUse('${sensor.id}', '${sensor.type}')">使用中にする (Mark as In Use)</button>
+                `;
+                sensorDataContainer.appendChild(sensorDiv);
+            });
+        }
+
+        async function markSensorInUse(sensorId, sensorType) {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = `状態: センサー ${sensorId} を更新中... (Updating sensor ${sensorId}...)`;
+
+            const payload = {
+                id: sensorId,
+                type: sensorType, // This is the sheet name
+                status: 'in use'
+            };
+
+            try {
+                const response = await fetch(manager.gasUrl, { // Use the same URL
+                    method: 'POST',
+                    // mode: 'cors', // Usually not needed for simple POST to GAS if deployed with "Anyone" access
+                    // fetch often defaults Content-Type to 'text/plain' for stringified JSON, which GAS doPost handles in e.postData.contents
+                    body: JSON.stringify(payload) 
+                });
+
+                const result = await response.json(); // Expecting JSON response from doPost
+
+                if (result.success) {
+                    statusElement.textContent = `状態: ${result.message}`;
+                    alert(`成功 (Success): ${result.message}`);
+                    updateSensorStatus(); // Refresh the list of sensors
+                } else {
+                    statusElement.textContent = `状態: 更新エラー (Update Error): ${result.message}`;
+                    alert(`エラー (Error): ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Error marking sensor in use:', error);
+                statusElement.textContent = '状態: 更新失敗。詳細はコンソールを確認してください。 (Update failed. Check console for details.)';
+                alert('センサーの状態更新に失敗しました (Failed to update sensor status).');
+            }
+        }
+
+        // Optionally, load sensors on page load
+        // window.onload = updateSensorStatus;
     </script>
 </body>
 </html>
