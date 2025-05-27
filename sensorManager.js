@@ -1,93 +1,56 @@
-// センサーのデータを取得するためのクラス
-
+// sensorManager.js
 class SensorManager {
     constructor(gasUrl) {
         this.gasUrl = gasUrl;
-        this.status = '未取得';
-        this.data = null;
-        this.sensorDetails = null;  // センサー詳細を保存するプロパティを追加
+        this.fetchStatus = '未取得'; // fetch操作の一般ステータス
+        this.freeSensorList = null;
+        this.inUseSensorList = null;
     }
 
-    async fetchSensorStatus() {
-        try {
-            //取得中という言葉を表示する
-            const statusElement = document.getElementById('status');
-            statusElement.textContent = '取得中...';
-
-            this.status = '取得中...';
-            //statusElement.textContent = '取得中...';
-            const response = await fetch(this.gasUrl);
-            
-            const data = await response.json();
-            
-            // 受け取ったデータをログ出力して確認
-            console.log('Received data:', data);
-            
-            this.data = data;
-            // GASから返ってきたallSensorDetailsを保存
-            this.sensorDetails = data;  // この時点でallSensorDetailsが入っている
-            
-            this.status = '取得成功';
+    async _fetchSensorData(statusType) {
+        // GAS URLに既に '?' が含まれているか確認して正しくパラメータを連結
+        const paramSeparator = this.gasUrl.includes('?') ? '&' : '?';
+        let fetchUrl = this.gasUrl + paramSeparator + 'statusType=' + encodeURIComponent(statusType);
         
+        this.fetchStatus = `取得中 (${statusType})...`;
+        console.log(`Workspaceing ${statusType} sensors from: ${fetchUrl}`); // URLをログに出力
+
+        try {
+            const response = await fetch(fetchUrl);
+            if (!response.ok) {
+                this.fetchStatus = `取得失敗 (${statusType}): ${response.status}`;
+                throw new Error(`HTTP error! status: ${response.status} for ${statusType} sensors`);
+            }
+            const data = await response.json();
+            this.fetchStatus = `取得成功 (${statusType})`;
+            console.log(`Received ${statusType} sensors:`, data);
             return data;
         } catch (error) {
-            console.error('エラー:', error);
-            this.status = '取得失敗';
-            throw error;
+            this.fetchStatus = `取得失敗 (${statusType}): ${error.message}`;
+            console.error(`Error fetching ${statusType} sensors:`, error);
+            throw error; // エラーを再スローして呼び出し元で処理できるようにする
         }
     }
 
-    // センサー詳細を取得するメソッドを追加
-    getSensorDetails() {
-
-        return this.sensorDetails;
+    async fetchFreeSensors() {
+        this.freeSensorList = await this._fetchSensorData('free');
+        return this.freeSensorList;
     }
 
-    // 特定のタイプと型番のセンサーIDを取得するメソッドを追加
-    getSpecificSensorIds(type, model) {
-        if (!this.sensorDetails) return [];
-        
-        return this.sensorDetails
-            .filter(sensor => 
-                sensor.type === type && 
-                sensor.model === model
-            )
-            .map(sensor => sensor.id);
+    async fetchInUseSensors() {
+        this.inUseSensorList = await this._fetchSensorData('in use');
+        return this.inUseSensorList;
     }
 
-    // WebCam C920nのIDを取得する専用メソッド（例として）
-    getWebCamC920nIds() {
-        return this.getSpecificSensorIds('CAMERA', 'WebCam C920n');
-    }
+    // getFreeSensors() は fetchFreeSensors の結果を返すようにするか、
+    // または fetchFreeSensors が直接リストを返すので不要になるかもしれません。
+    // ここでは、fetchメソッドがリストを直接返すので、個別のgetterは必須ではないかもしれません。
+    // 必要に応じて残すか、fetchメソッドの結果を直接利用します。
+    // getFreeSensors() { return this.freeSensorList; }
+    // getInUseSensors() { return this.inUseSensorList; }
 
-    getStatus() {
-        return this.status;
-    }
-
-    getData() {
-        return this.data;
-    }
-
-    formatData() {
-        if (!this.data || !this.data.sensors) return null;
-        
-        // センサータイプごとにグループ化
-        const groupedSensors = this.data.sensors.reduce((acc, sensor) => {
-            if (!acc[sensor.type]) {
-                acc[sensor.type] = [];
-            }
-            acc[sensor.type].push(sensor);
-            return acc;
-        }, {});
-
-        return {
-            summary: {
-                total: this.data.sensors.length,
-                updated: this.data.updated,
-                types: Object.keys(groupedSensors).length
-            },
-            sensorsByType: groupedSensors
-        };
+    getFetchStatus() {
+        return this.fetchStatus;
     }
 }
 

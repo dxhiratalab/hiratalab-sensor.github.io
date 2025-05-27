@@ -150,7 +150,7 @@
         // 画面ロード時の処理をGAS対応に変更
         window.onload = async function() {
             const sensorGrid = document.getElementById('sensorGrid');
-            const GAS_URL = 'https://script.google.com/macros/s/AKfycbwzLyRVky0fkwMibm5PHuwdU-8rsuDNqOlLHudBlrZZ653-q3on9xT2nP8n5v0vRkt37Q/exec';
+            const GAS_URL = 'https://script.google.com/macros/s/AKfycbyo7WCmt1DTmQ9rrIHo4zDmBnRkk0oBG1s0IcNDVr-dYywKpSJavBalIpIZiQvuQQhizw/exec';
             const sensorManager = new SensorManager(GAS_URL);
 
             try {
@@ -176,7 +176,7 @@
             
             for (const typeKey in sensorData) {
                 const sensor = sensorData[typeKey];
-                const available = sensor.sensors.filter(s => s.status === 'free').length;
+                const available = sensor.sensors.filter(s => s.status === 'available').length;
                 const inUse = sensor.sensors.filter(s => s.status === 'in-use').length;
 
                 const card = document.createElement('div');
