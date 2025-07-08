@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>センサー管理</title>
+    <style>
+        /* (既存のスタイルはそのまま) */
+        body { font-family: sans-serif; margin: 20px; }
+        .sensor-item { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        .sensor-item p { margin: 5px 0; }
+        .sensor-item button { margin-top: 5px; padding: 8px 12px; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        .free-button { background-color: #28a745; } /* 空きにするボタン */
+        .free-button:hover { background-color: #218838; }
+        .inuse-button { background-color: #007bff; } /* 使用中にするボタン */
+        .inuse-button:hover { background-color: #0056b3; }
+        .section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+        h1, h2 { color: #333; }
+        button { margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <h1>センサー管理システム</h1>
+
+    <div class="section">
+        <h2>空きセンサー一覧</h2>
+        <button onclick="updateFreeSensorDisplay()">空きセンサー更新</button>
+        <p id="freeStatus">状態: 未取得</p>
+        <div id="freeSensorDataContainer">
+            </div>
+    </div>
+
+    <div class="section">
+        <h2>使用中センサー一覧</h2>
+        <button onclick="updateInUseSensorDisplay()">使用中センサー表示</button>
+        <p id="inUseStatus">状態: 未取得</p>
+        <div id="inUseSensorDataContainer">
+            </div>
+    </div>
+
+    <script src="sensorManager.js"></script>
+    <script>
+        const manager = new SensorManager('https://script.google.com/macros/s/AKfycbyo7WCmt1DTmQ9rrIHo4zDmBnRkk0oBG1s0IcNDVr-dYywKpSJavBalIpIZiQvuQQhizw/exec'); // あなたのGAS Web App URLに置き換えてください
+
+        // --- 空きセンサー関連 ---
+        async function updateFreeSensorDisplay() {
+            const statusElement = document.getElementById('freeStatus');
+            const container = document.getElementById('freeSensorDataContainer');
+            statusElement.textContent = '状態: 空きセンサー取得中...';
+            container.innerHTML = '<p>Loading free sensors...</p>';
+            try {
+                const freeSensors = await manager.fetchFreeSensors();
+                statusElement.textContent = `状態: ${manager.getFetchStatus()}`;
+                displayFreeSensors(freeSensors);
+            } catch (error) {
+                statusElement.textContent = `状態: 空きセンサー取得エラー: ${error.message}`;
+                container.innerHTML = '<p>Could not load free sensor data.</p>';
+                console.error('空きセンサー取得エラー:', error);
+            }
+        }
+
+        function displayFreeSensors(sensors) {
+            const container = document.getElementById('freeSensorDataContainer');
+            container.innerHTML = '';
+            if (!sensors || sensors.length === 0) {
+                container.innerHTML = '<p>利用可能な空きセンサーはありません。</p>';
+                return;
+            }
+            sensors.forEach(sensor => {
+                const div = document.createElement('div');
+                div.className = 'sensor-item';
+                div.innerHTML = `
+                    <p><strong>タイプ:</strong> ${sensor.type}</p>
+                    <p><strong>モデル:</strong> ${sensor.model}</p>
+                    <p><strong>ID:</strong> ${sensor.id}</p>
+                    <p><strong>会社:</strong> ${sensor.company}</p>
+                    <p><strong>状態:</strong> ${sensor.status}</p>
+                    <button class="inuse-button" onclick="markSensorInUse('${sensor.id}', '${sensor.type}')">使用中にする</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function markSensorInUse(sensorId, sensorType) {
+            const statusElement = document.getElementById('freeStatus'); // 空きセンサーセクションのステータスを更新
+            statusElement.textContent = `状態: センサー ${sensorId} を「使用中」に更新中...`;
+            const payload = { id: sensorId, type: sensorType, status: 'in use' };
+            try {
+                const response = await fetch(manager.gasUrl, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+                if (result.success) {
+                    alert(`成功: ${result.message}`);
+                    updateFreeSensorDisplay(); // 空きセンサーリストを更新
+                    // updateInUseSensorDisplay(); // 必要なら使用中リストも更新
+                } else {
+                    alert(`エラー: ${result.message}`);
+                    statusElement.textContent = `状態: 更新エラー: ${result.message}`;
+                }
+            } catch (error) {
+                console.error('Error marking sensor in use:', error);
+                alert('センサー状態の更新に失敗しました。');
+                statusElement.textContent = `状態: 更新失敗: ${error.message}`;
+            }
+        }
+
+        // --- 使用中センサー関連 ---
+        async function updateInUseSensorDisplay() {
+            const statusElement = document.getElementById('inUseStatus');
+            const container = document.getElementById('inUseSensorDataContainer');
+            statusElement.textContent = '状態: 使用中センサー取得中...';
+            container.innerHTML = '<p>Loading "in use" sensors...</p>';
+            try {
+                const inUseSensors = await manager.fetchInUseSensors();
+                statusElement.textContent = `状態: ${manager.getFetchStatus()}`;
+                displayInUseSensors(inUseSensors);
+            } catch (error) {
+                statusElement.textContent = `状態: 使用中センサー取得エラー: ${error.message}`;
+                container.innerHTML = '<p>Could not load "in use" sensor data.</p>';
+                console.error('使用中センサー取得エラー:', error);
+            }
+        }
+
+        function displayInUseSensors(sensors) {
+            const container = document.getElementById('inUseSensorDataContainer');
+            container.innerHTML = '';
+            if (!sensors || sensors.length === 0) {
+                container.innerHTML = '<p>現在使用中のセンサーはありません。</p>';
+                return;
+            }
+            sensors.forEach(sensor => {
+                const div = document.createElement('div');
+                div.className = 'sensor-item';
+                div.innerHTML = `
+                    <p><strong>タイプ:</strong> ${sensor.type}</p>
+                    <p><strong>モデル:</strong> ${sensor.model}</p>
+                    <p><strong>ID:</strong> ${sensor.id}</p>
+                    <p><strong>会社:</strong> ${sensor.company}</p>
+                    <p><strong>状態:</strong> ${sensor.status}</p>
+                    <button class="free-button" onclick="markSensorAsFree('${sensor.id}', '${sensor.type}')">空きにする</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function markSensorAsFree(sensorId, sensorType) {
+            const statusElement = document.getElementById('inUseStatus'); // 使用中センサーセクションのステータスを更新
+            statusElement.textContent = `状態: センサー ${sensorId} を「空き」に更新中...`;
+            const payload = { id: sensorId, type: sensorType, status: 'free' };
+            try {
+                const response = await fetch(manager.gasUrl, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+                if (result.success) {
+                    alert(`成功: ${result.message}`);
+                    updateInUseSensorDisplay(); // 使用中センサーリストを更新
+                    // updateFreeSensorDisplay(); // 必要なら空きセンサーリストも更新
+                } else {
+                    alert(`エラー: ${result.message}`);
+                    statusElement.textContent = `状態: 更新エラー: ${result.message}`;
+                }
+            } catch (error) {
+                console.error('Error marking sensor as free:', error);
+                alert('センサー状態の更新に失敗しました。');
+                statusElement.textContent = `状態: 更新失敗: ${error.message}`;
+            }
+        }
+
+        // 初期表示（オプション）
+        // window.onload = () => {
+        //     updateFreeSensorDisplay();
+        //     updateInUseSensorDisplay();
+        // };
+    </script>
+</body>
+</html>

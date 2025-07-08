@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>センサー状態確認</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .status-container {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>センサー状態確認</h1>
+    <button onclick="fetchSensorStatus()">状態を更新</button>
+    <div class="status-container">
+        <p id="status">状態: 未取得</p>
+        <div id="sensorData"></div>
+    </div>
+
+    <script>
+        function fetchSensorStatus() {
+            document.getElementById('status').textContent = '状態: 取得中...';
+            
+            // GASのURLをここに設定してください
+            const gasUrl = "https://script.google.com/macros/s/YOUR_GAS_SCRIPT_URL/exec";
+            
+            fetch(gasUrl)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('status').textContent = '状態: 取得成功';
+                    displaySensorData(data);
+                })
+                .catch(error => {
+                    console.error('エラー:', error);
+                    document.getElementById('status').textContent = '状態: 取得失敗';
+                });
+        }
+
+        function displaySensorData(data) {
+            const sensorDataDiv = document.getElementById('sensorData');
+            sensorDataDiv.innerHTML = ''; // 既存のデータをクリア
+
+            // データの表示方法は、GASから返されるデータ構造に応じて調整してください
+            if (Array.isArray(data)) {
+                const ul = document.createElement('ul');
+                data.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = JSON.stringify(item);
+                    ul.appendChild(li);
+                });
+                sensorDataDiv.appendChild(ul);
+            } else {
+                sensorDataDiv.textContent = JSON.stringify(data, null, 2);
+            }
+        }
+    </script>
+</body>
+</html> 

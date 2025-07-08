@@ -1,0 +1,58 @@
+function updateFreeSensorCountsAndDetails() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const inventorySheet = ss.getSheetByName("Inventory List");
+  const inventoryData = inventorySheet.getDataRange().getValues();
+
+  const SENSOR_SHEETS = [
+    { sheetName: "CAMERA", itemClass: SensorItem },
+    { sheetName: "IMU", itemClass: SensorItem },
+    { sheetName: "LIDAR", itemClass: SensorItem },
+    { sheetName: "MOTOR", itemClass: SensorItem }
+  ];
+
+  const allCounts = {};
+  const allSensorDetails = [];
+
+  for (const sensor of SENSOR_SHEETS) {
+    const sheet = ss.getSheetByName(sensor.sheetName);
+    if (!sheet) continue;
+
+    const data = sheet.getDataRange().getValues();
+    const inventory = new SensorInventory(data);
+    const counts = inventory.countFreeByModel();
+    Object.assign(allCounts, counts);
+
+    // センサごとの詳細データ取得
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const company = String(row[1]).trim();
+      const id = String(row[2]).trim();      // ID列想定
+      const model = String(row[3]).trim();
+      const status = String(row[5]).trim();
+
+      allSensorDetails.push({
+        type: sensor.sheetName,
+        company,
+        id,
+        model,
+        status
+      });
+    }
+  }
+
+  // Inventory List 更新
+  for (let i = 1; i < inventoryData.length; i++) {
+    const company = String(inventoryData[i][1]).toLowerCase().trim();
+    const model = String(inventoryData[i][2]).toLowerCase().trim();
+    const key = `${company}|${model}`;
+
+    const count = allCounts[key] !== undefined ? allCounts[key] : 0;
+    inventorySheet.getRange(i + 1, 4).setValue(count);
+  }
+
+  return {
+    status: "success",
+    updated: Object.keys(allCounts).length,
+    sensors: allSensorDetails
+  };
+}
